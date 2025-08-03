@@ -1,0 +1,27 @@
+{
+  "name": "@quran-reciter/database",
+  "version": "1.0.0",
+  "description": "Database schemas, migrations, and utilities for Quran Reciter platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "generate": "prisma generate",
+    "push": "prisma db push",
+    "seed": "tsx prisma/seed/index.ts",
+    "studio": "prisma studio",
+    "migrate": "prisma migrate dev",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "mongoose": "^7.5.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.0.0",
+    "typescript": "^5.1.3",
+    "tsx": "^3.12.7",
+    "rimraf": "^5.0.1"
+  }
+}

@@ -507,17 +507,3 @@ export class TransactionHelper {
 }
 
 // Export all utilities
-export {
-  QueryBuilder,
-  AggregationBuilder,
-  PaginationHelper,
-  ValidationHelper,
-  IndexManager,
-  CacheHelper,
-  MigrationHelper,
-  PerformanceMonitor,
-  TransactionHelper
-};
-
-// Export types
-export type { PaginationOptions, PaginationResult };

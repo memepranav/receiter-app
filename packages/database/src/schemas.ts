@@ -405,22 +405,3 @@ export interface QueryOptions {
   populate?: string | string[];
 }
 
-// Export all schema types
-export type {
-  UserSchema,
-  ReadingSessionSchema,
-  BookmarkSchema,
-  RewardSchema,
-  TransactionSchema,
-  UserBalanceSchema,
-  BadgeSchema,
-  UserBadgeSchema,
-  AnalyticsEventSchema,
-  FriendshipSchema,
-  NotificationSchema,
-  WithdrawalRequestSchema,
-  AppSettingsSchema,
-  AuditLogSchema,
-  ErrorLogSchema,
-  LeaderboardCacheSchema
-};

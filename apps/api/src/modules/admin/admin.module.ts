@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 
 import { AdminController } from './admin.controller';
+import { AdminAuthController } from './admin-auth.controller';
 import { AdminService } from './admin.service';
 
 // Import schemas from other modules
@@ -23,6 +24,7 @@ import { UsersService } from '../users/users.service';
 import { RewardsService } from '../rewards/rewards.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { BlockchainService } from '../rewards/blockchain.service';
+import { AuthService } from '../auth/auth.service';
 
 @Module({
   imports: [
@@ -39,8 +41,8 @@ import { BlockchainService } from '../rewards/blockchain.service';
     LoggerModule,
     RedisModule,
   ],
-  controllers: [AdminController],
-  providers: [AdminService, UsersService, RewardsService, AnalyticsService, BlockchainService],
+  controllers: [AdminController, AdminAuthController],
+  providers: [AdminService, AuthService, UsersService, RewardsService, AnalyticsService, BlockchainService],
   exports: [AdminService],
 })
 export class AdminModule {}

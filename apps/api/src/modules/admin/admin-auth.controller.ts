@@ -34,7 +34,7 @@ export class AdminAuthController {
   @HttpCode(HttpStatus.OK)
   async adminLogin(@Body() loginDto: LoginDto, @GetUser() user: AuthenticatedUser) {
     // Check if user has admin role
-    if (!user.roles?.includes('admin')) {
+    if (user.role !== 'admin') {
       throw new Error('Access denied. Admin privileges required.');
     }
     return this.authService.login(user);

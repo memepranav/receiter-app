@@ -315,7 +315,7 @@ export const UPLOAD_CONFIG = {
 } as const;
 
 // Development Configuration
-export const DEV_CONFIG = {
+export const API_DEV_CONFIG = {
   LOG_LEVEL: getEnvVar('REACT_APP_LOG_LEVEL', 'info'),
   ENABLE_DEBUG: getEnvVar('REACT_APP_ENABLE_DEBUG', 'false') === 'true',
   MOCK_API: getEnvVar('REACT_APP_MOCK_API', 'false') === 'true',

@@ -347,7 +347,10 @@ export function getOptimalImageSize(
  * Create a URL with query parameters
  */
 export function createUrlWithParams(baseUrl: string, params: Record<string, any>): string {
-  const url = new URL(baseUrl, window?.location?.origin || 'http://localhost');
+  const origin = typeof globalThis !== 'undefined' && 'location' in globalThis 
+    ? (globalThis as any).location?.origin 
+    : 'http://localhost';
+  const url = new URL(baseUrl, origin);
   
   Object.entries(params).forEach(([key, value]) => {
     if (value !== null && value !== undefined) {

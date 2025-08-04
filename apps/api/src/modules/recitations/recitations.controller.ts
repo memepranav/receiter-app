@@ -141,7 +141,7 @@ export class RecitationsController {
     @Query('surah') surah?: number,
     @Query('translation') translation?: string,
     @Query('limit') limit = 20,
-    @GetUser() user: AuthenticatedUser,
+    @GetUser() user?: AuthenticatedUser,
   ) {
     return this.recitationsService.searchQuran(query, {
       surah,

@@ -13,7 +13,6 @@ import { RedisService } from './redis.service';
           url: configService.get<string>('REDIS_URL') || 'redis://localhost:6379',
           socket: {
             connectTimeout: 5000,
-            lazyConnect: true,
           },
         });
 

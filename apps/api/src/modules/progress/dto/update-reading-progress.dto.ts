@@ -13,6 +13,9 @@ export class ReadingProgressDto {
   @ApiProperty({ description: 'Reading time for this ayah in milliseconds' })
   @IsNumber()
   readingTime: number;
+
+  @ApiProperty({ description: 'Timestamp when ayah was read' })
+  timestamp: Date;
 }
 
 export class UpdateReadingProgressDto {

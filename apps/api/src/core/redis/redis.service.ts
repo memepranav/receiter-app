@@ -85,7 +85,7 @@ export class RedisService implements OnModuleDestroy {
   async expire(key: string, seconds: number): Promise<boolean> {
     try {
       const result = await this.redisClient.expire(key, seconds);
-      return result === 1;
+      return result === true;
     } catch (error) {
       this.logger.error(`Failed to set expiration for key ${key}`, error);
       throw error;
@@ -122,9 +122,9 @@ export class RedisService implements OnModuleDestroy {
   async zrevrange(key: string, start: number, stop: number, withScores = false): Promise<any[]> {
     try {
       if (withScores) {
-        return await this.redisClient.zRevRangeWithScores(key, start, stop);
+        return await this.redisClient.zRangeWithScores(key, start, stop, { REV: true });
       }
-      return await this.redisClient.zRevRange(key, start, stop);
+      return await this.redisClient.zRange(key, start, stop, { REV: true });
     } catch (error) {
       this.logger.error(`Failed to get sorted set range ${key}`, error);
       throw error;

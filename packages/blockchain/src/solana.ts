@@ -578,12 +578,3 @@ export class TokenAccountError extends SolanaError {
   }
 }
 
-// Export types and classes
-export type {
-  SolanaConfig,
-  TransferParams,
-  StakeParams,
-  WithdrawalParams,
-  TokenBalance,
-  TransactionResult
-};

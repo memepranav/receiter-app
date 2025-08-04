@@ -170,7 +170,14 @@ export class User {
   showOnLeaderboard: boolean;
 
   // Device and Session Info
-  @Prop({ required: false })
+  @Prop({ 
+    type: {
+      platform: String,
+      version: String,
+      deviceId: String
+    },
+    required: false 
+  })
   lastDeviceInfo?: {
     platform: string;
     version: string;

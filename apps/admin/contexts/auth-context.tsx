@@ -61,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const login = async (email: string, password: string) => {
+    setIsLoading(true)
     try {
       // TODO: Replace with actual API call
       const response = await fetch('/api/admin/auth/login', {
@@ -81,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.push('/dashboard')
     } catch (error) {
       throw error
+    } finally {
+      setIsLoading(false)
     }
   }
 

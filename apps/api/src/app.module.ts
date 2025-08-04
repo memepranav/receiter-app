@@ -23,7 +23,7 @@ import { LoggerModule } from './core/logger/logger.module';
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '../admin/.env', // Reference admin .env file
+      envFilePath: '.env', // Use local API .env file
     }),
     
     // Database
@@ -31,6 +31,8 @@ import { LoggerModule } from './core/logger/logger.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         uri: configService.get('DATABASE_URL') || configService.get('MONGODB_URI'),
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
       }),
     }),
     

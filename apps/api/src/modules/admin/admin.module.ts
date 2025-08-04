@@ -12,6 +12,7 @@ import { Reward, RewardSchema } from '../rewards/schemas/reward.schema';
 import { Transaction, TransactionSchema } from '../rewards/schemas/transaction.schema';
 import { Badge, BadgeSchema } from '../rewards/schemas/badge.schema';
 import { AnalyticsEvent, AnalyticsEventSchema } from '../analytics/schemas/analytics-event.schema';
+import { UserSession, UserSessionSchema } from '../analytics/schemas/user-session.schema';
 
 // Core modules
 import { LoggerModule } from '../../core/logger/logger.module';
@@ -33,6 +34,7 @@ import { BlockchainService } from '../rewards/blockchain.service';
       { name: Transaction.name, schema: TransactionSchema },
       { name: Badge.name, schema: BadgeSchema },
       { name: AnalyticsEvent.name, schema: AnalyticsEventSchema },
+      { name: UserSession.name, schema: UserSessionSchema },
     ]),
     LoggerModule,
     RedisModule,

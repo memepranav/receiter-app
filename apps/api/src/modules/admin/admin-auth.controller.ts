@@ -19,7 +19,7 @@ import { TransformInterceptor } from '../../common/interceptors/transform.interc
 import { AuthenticatedUser } from '../auth/interfaces/auth.interface';
 
 @ApiTags('Admin Authentication')
-@Controller('api/admin/auth')
+@Controller('admin/auth')
 @UseInterceptors(TransformInterceptor)
 @UseGuards(ThrottlerGuard)
 export class AdminAuthController {

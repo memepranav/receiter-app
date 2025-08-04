@@ -27,7 +27,7 @@ import { AdminRewardDto } from './dto/admin-reward.dto';
 import { AdminQueryDto } from './dto/admin-query.dto';
 
 @ApiTags('Admin Management')
-@Controller('api/admin')
+@Controller('admin')
 @UseGuards(JwtAuthGuard, AdminGuard)
 @UseInterceptors(TransformInterceptor)
 @ApiBearerAuth()

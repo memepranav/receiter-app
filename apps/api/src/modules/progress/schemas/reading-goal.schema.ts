@@ -89,7 +89,7 @@ export class ReadingGoal {
   @Prop({ required: false })
   targetJuz?: number;
 
-  @Prop({ required: false })
+  @Prop({ type: Object, required: false })
   targetAyahRange?: {
     startSurah: number;
     startAyah: number;

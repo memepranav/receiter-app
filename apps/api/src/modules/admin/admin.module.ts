@@ -21,6 +21,7 @@ import { RedisModule } from '../../core/redis/redis.module';
 import { UsersService } from '../users/users.service';
 import { RewardsService } from '../rewards/rewards.service';
 import { AnalyticsService } from '../analytics/analytics.service';
+import { BlockchainService } from '../rewards/blockchain.service';
 
 @Module({
   imports: [
@@ -37,7 +38,7 @@ import { AnalyticsService } from '../analytics/analytics.service';
     RedisModule,
   ],
   controllers: [AdminController],
-  providers: [AdminService, UsersService, RewardsService, AnalyticsService],
+  providers: [AdminService, UsersService, RewardsService, AnalyticsService, BlockchainService],
   exports: [AdminService],
 })
 export class AdminModule {}

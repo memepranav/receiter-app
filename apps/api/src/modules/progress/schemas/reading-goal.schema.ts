@@ -101,7 +101,7 @@ export class ReadingGoal {
   @Prop({ required: true, default: false })
   isRecurring: boolean;
 
-  @Prop({ required: false })
+  @Prop({ type: Object, required: false })
   recurrencePattern?: {
     frequency: string; // 'daily', 'weekly', 'monthly'
     interval: number; // Every N days/weeks/months
@@ -110,7 +110,7 @@ export class ReadingGoal {
   };
 
   // Progress tracking
-  @Prop({ required: true, default: [] })
+  @Prop({ type: [Object], required: true, default: [] })
   progressHistory: {
     date: Date;
     value: number;

@@ -29,11 +29,11 @@ async function bootstrap() {
   // API prefix
   app.setGlobalPrefix('api');
   
-  const port = configService.get('API_PORT') || 3003;
-  await app.listen(port);
+  const port = configService.get('API_PORT') || 3001;
+  await app.listen(port, '0.0.0.0');
   
   console.log(`🚀 Quran Reciter API running on port ${port}`);
-  console.log(`📖 API Documentation: http://localhost:${port}/api`);
+  console.log(`📖 API Documentation: http://0.0.0.0:${port}/api`);
 }
 
 bootstrap();

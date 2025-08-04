@@ -10,6 +10,7 @@ import { User, UserSchema } from '../users/schemas/user.schema';
 import { ReadingSession, ReadingSessionSchema } from '../progress/schemas/reading-session.schema';
 import { Reward, RewardSchema } from '../rewards/schemas/reward.schema';
 import { Transaction, TransactionSchema } from '../rewards/schemas/transaction.schema';
+import { Badge, BadgeSchema } from '../rewards/schemas/badge.schema';
 import { AnalyticsEvent, AnalyticsEventSchema } from '../analytics/schemas/analytics-event.schema';
 
 // Core modules
@@ -29,6 +30,7 @@ import { AnalyticsService } from '../analytics/analytics.service';
       { name: ReadingSession.name, schema: ReadingSessionSchema },
       { name: Reward.name, schema: RewardSchema },
       { name: Transaction.name, schema: TransactionSchema },
+      { name: Badge.name, schema: BadgeSchema },
       { name: AnalyticsEvent.name, schema: AnalyticsEventSchema },
     ]),
     LoggerModule,

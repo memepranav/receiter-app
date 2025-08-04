@@ -50,7 +50,14 @@ export class Badge {
   isActive: boolean;
 
   // Requirements to earn this badge
-  @Prop({ required: true })
+  @Prop({ 
+    type: {
+      type: String,
+      value: Number,
+      period: String
+    },
+    required: true 
+  })
   requirements: {
     type: string; // 'reading_time', 'surahs_completed', 'streak_days', etc.
     value: number;

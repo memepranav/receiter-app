@@ -38,7 +38,7 @@ import { TransformInterceptor } from '../../common/interceptors/transform.interc
 import { AuthenticatedUser } from './interfaces/auth.interface';
 
 @ApiTags('Authentication')
-@Controller('api/v1/auth')
+@Controller('v1/auth')
 @UseInterceptors(TransformInterceptor)
 @UseGuards(ThrottlerGuard)
 export class AuthController {

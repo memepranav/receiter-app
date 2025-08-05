@@ -19,7 +19,7 @@ import { AuthenticatedUser } from '../auth/interfaces/auth.interface';
 import { GetQuranQueryDto } from './dto/get-quran-query.dto';
 
 @ApiTags('Quran Content')
-@Controller('api/v1/quran')
+@Controller('v1/quran')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(TransformInterceptor)
 @ApiBearerAuth()

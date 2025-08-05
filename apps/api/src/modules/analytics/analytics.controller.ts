@@ -24,7 +24,7 @@ import { EndSessionDto } from './dto/end-session.dto';
 import { GetAnalyticsQueryDto } from './dto/get-analytics-query.dto';
 
 @ApiTags('Analytics & Tracking')
-@Controller('api/v1/analytics')
+@Controller('v1/analytics')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(TransformInterceptor)
 @ApiBearerAuth()

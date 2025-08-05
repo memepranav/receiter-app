@@ -32,7 +32,7 @@ export class EmailService {
       },
     };
 
-    this.transporter = nodemailer.createTransporter(smtpConfig);
+    this.transporter = nodemailer.createTransport(smtpConfig);
 
     // Verify connection configuration
     this.transporter.verify((error, success) => {
@@ -63,16 +63,22 @@ export class EmailService {
       const result = await this.transporter.sendMail(mailOptions);
       
       this.loggerService.logWithContext('Email sent successfully', {
-        to: options.to,
-        subject: options.subject,
-        messageId: result.messageId,
+        action: 'send_email',
+        metadata: {
+          to: options.to,
+          subject: options.subject,
+          messageId: result.messageId,
+        },
       });
 
       return true;
     } catch (error) {
       this.loggerService.errorWithContext('Failed to send email', error.stack, {
-        to: options.to,
-        subject: options.subject,
+        action: 'send_email_failed',
+        metadata: {
+          to: options.to,
+          subject: options.subject,
+        },
       });
       return false;
     }

@@ -30,7 +30,7 @@ import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 
 @ApiTags('Reading Progress & Goals')
-@Controller('api/v1/progress')
+@Controller('v1/progress')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(TransformInterceptor)
 @ApiBearerAuth()

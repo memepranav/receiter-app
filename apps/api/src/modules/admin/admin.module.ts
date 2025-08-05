@@ -23,6 +23,7 @@ import { UserSession, UserSessionSchema } from '../analytics/schemas/user-sessio
 // Core modules
 import { LoggerModule } from '../../core/logger/logger.module';
 import { RedisModule } from '../../core/redis/redis.module';
+import { EmailModule } from '../../core/email/email.module';
 
 // Other service modules for admin operations
 import { UsersService } from '../users/users.service';
@@ -56,6 +57,7 @@ import { AuthService } from '../auth/auth.service';
     ]),
     LoggerModule,
     RedisModule,
+    EmailModule,
   ],
   controllers: [AdminController, AdminAuthController],
   providers: [AdminService, AdminAuthService, AuthService, UsersService, RewardsService, AnalyticsService, BlockchainService],

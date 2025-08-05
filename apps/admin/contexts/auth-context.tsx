@@ -48,7 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const userData = await response.json()
-        setUser(userData)
+        // Handle the wrapped response structure from NestJS
+        const user = userData.data || userData
+        setUser(user)
       } else {
         localStorage.removeItem('admin_token')
       }
@@ -77,8 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await response.json()
-      localStorage.setItem('admin_token', data.token)
-      setUser(data.user)
+      // Handle the wrapped response structure from NestJS
+      const responseData = data.data || data
+      localStorage.setItem('admin_token', responseData.accessToken || responseData.token)
+      setUser(responseData.user)
       router.push('/dashboard')
     } catch (error) {
       throw error

@@ -17,6 +17,7 @@ import { User, UserSchema } from '../users/schemas/user.schema';
 // Core modules
 import { RedisModule } from '../../core/redis/redis.module';
 import { LoggerModule } from '../../core/logger/logger.module';
+import { EmailModule } from '../../core/email/email.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { LoggerModule } from '../../core/logger/logger.module';
     }),
     RedisModule,
     LoggerModule,
+    EmailModule,
   ],
   controllers: [AuthController],
   providers: [

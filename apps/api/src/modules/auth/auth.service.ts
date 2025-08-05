@@ -18,6 +18,7 @@ import { User, UserDocument } from '../users/schemas/user.schema';
 // Services
 import { RedisService } from '../../core/redis/redis.service';
 import { LoggerService } from '../../core/logger/logger.service';
+import { EmailService } from '../../core/email/email.service';
 
 // DTOs
 import { RegisterDto } from './dto/register.dto';
@@ -36,6 +37,7 @@ export class AuthService {
     private configService: ConfigService,
     private redisService: RedisService,
     private loggerService: LoggerService,
+    private emailService: EmailService,
   ) {}
 
   /**
@@ -233,8 +235,13 @@ export class AuthService {
       this.resetTokenExpiry / 1000, // Redis expects seconds
     );
 
-    // TODO: Send email with reset link
-    // const resetUrl = `${this.configService.get('FRONTEND_URL')}/auth/reset-password?token=${resetToken}`;
+    // Send password reset email
+    try {
+      await this.emailService.sendPasswordResetEmail(email, resetToken);
+    } catch (error) {
+      this.loggerService.errorWithContext('Failed to send password reset email', error.stack);
+      // Don't throw error - we still want to return success message for security
+    }
 
     this.loggerService.logAuthEvent('password_reset_requested', user._id.toString(), {
       email,

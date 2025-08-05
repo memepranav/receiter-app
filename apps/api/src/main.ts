@@ -3,11 +3,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import * as compression from 'compression';
+import * as path from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
   
   // Security middleware with Swagger UI exceptions
@@ -44,6 +46,16 @@ async function bootstrap() {
   // API prefix
   app.setGlobalPrefix('api');
   
+  // Serve swagger-ui static assets
+  try {
+    const swaggerUiAssetPath = path.join(require.resolve('swagger-ui-dist/package.json'), '..', 'dist');
+    app.useStaticAssets(swaggerUiAssetPath, {
+      prefix: '/api/docs/',
+    });
+  } catch (error) {
+    console.warn('Could not set up Swagger UI static assets:', error.message);
+  }
+  
   // Swagger Documentation Setup
   const config = new DocumentBuilder()
     .setTitle('Quran Reciter API')
@@ -60,13 +72,7 @@ async function bootstrap() {
     .build();
   
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
-    customSiteTitle: 'Quran Reciter API Documentation',
-    swaggerOptions: {
-      persistAuthorization: true,
-      tryItOutEnabled: true,
-    },
-  });
+  SwaggerModule.setup('api/docs', app, document);
   
   const port = configService.get('API_PORT') || 3001;
   await app.listen(port, '0.0.0.0');

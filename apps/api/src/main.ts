@@ -18,6 +18,8 @@ async function bootstrap() {
   app.enableCors({
     origin: configService.get('CORS_ORIGINS')?.split(',') || ['http://localhost:3002'],
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
   });
   
   // Global validation pipe
@@ -49,13 +51,13 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document, {
     customSiteTitle: 'Quran Reciter API Documentation',
     customfavIcon: '/favicon.ico',
-    customJs: [
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.min.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.min.js',
-    ],
-    customCssUrl: [
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
-    ],
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info { margin: 20px 0 }
+    `,
   });
   
   const port = configService.get('API_PORT') || 3001;

@@ -33,7 +33,7 @@ import { UpdateNotificationSettingsDto } from './dto/update-notification-setting
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 
 @ApiTags('User Management')
-@Controller('api/v1/user')
+@Controller('v1/user')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(TransformInterceptor)
 @ApiBearerAuth()

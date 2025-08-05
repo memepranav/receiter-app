@@ -26,7 +26,7 @@ import { GetRewardsQueryDto } from './dto/get-rewards-query.dto';
 import { GetTransactionsQueryDto } from './dto/get-transactions-query.dto';
 
 @ApiTags('Rewards & Blockchain')
-@Controller('api/v1/rewards')
+@Controller('v1/rewards')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(TransformInterceptor)
 @ApiBearerAuth()

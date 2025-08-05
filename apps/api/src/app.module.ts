@@ -12,6 +12,7 @@ import { RewardsModule } from './modules/rewards/rewards.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { ProgressModule } from './modules/progress/progress.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { CommonModule } from './modules/common/common.module';
 
 // Core Modules
 import { DatabaseModule } from './core/database/database.module';
@@ -68,6 +69,7 @@ import { LoggerModule } from './core/logger/logger.module';
     AnalyticsModule,
     ProgressModule,
     AdminModule,
+    CommonModule,
   ],
 })
 export class AppModule {}

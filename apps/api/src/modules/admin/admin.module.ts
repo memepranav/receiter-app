@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 
 import { AdminController } from './admin.controller';
 import { AdminAuthController } from './admin-auth.controller';
 import { AdminService } from './admin.service';
+import { AdminAuthService } from './services/admin-auth.service';
+
+// Import admin schema
+import { Admin, AdminSchema } from './schemas/admin.schema';
 
 // Import schemas from other modules
 import { User, UserSchema } from '../users/schemas/user.schema';
@@ -29,7 +34,18 @@ import { AuthService } from '../auth/auth.service';
 @Module({
   imports: [
     ConfigModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService) => ({
+        secret: configService.get('JWT_SECRET'),
+        signOptions: {
+          expiresIn: configService.get('JWT_EXPIRES_IN') || '24h',
+        },
+      }),
+      inject: [ConfigService],
+    }),
     MongooseModule.forFeature([
+      { name: Admin.name, schema: AdminSchema },
       { name: User.name, schema: UserSchema },
       { name: ReadingSession.name, schema: ReadingSessionSchema },
       { name: Reward.name, schema: RewardSchema },
@@ -42,7 +58,7 @@ import { AuthService } from '../auth/auth.service';
     RedisModule,
   ],
   controllers: [AdminController, AdminAuthController],
-  providers: [AdminService, AuthService, UsersService, RewardsService, AnalyticsService, BlockchainService],
-  exports: [AdminService],
+  providers: [AdminService, AdminAuthService, AuthService, UsersService, RewardsService, AnalyticsService, BlockchainService],
+  exports: [AdminService, AdminAuthService],
 })
 export class AdminModule {}

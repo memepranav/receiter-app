@@ -62,14 +62,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document, {
     customSiteTitle: 'Quran Reciter API Documentation',
-    customfavIcon: '/favicon.ico',
     swaggerOptions: {
       persistAuthorization: true,
+      tryItOutEnabled: true,
     },
-    customCss: `
-      .swagger-ui .topbar { display: none }
-      .swagger-ui .info { margin: 20px 0 }
-    `,
   });
   
   const port = configService.get('API_PORT') || 3001;

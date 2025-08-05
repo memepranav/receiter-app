@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('Documentation')
-@Controller('api')
+@Controller()
 export class DocsController {
   @ApiOperation({ summary: 'Get all available API endpoints' })
   @ApiResponse({ status: 200, description: 'List of all API endpoints' })

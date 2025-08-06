@@ -3,9 +3,9 @@ const fs = require('fs')
 const path = require('path')
 
 async function updateQuranStructure() {
-  // Use the same MongoDB URI as your application
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/quran-reciter-platform'
-  console.log('Connecting to MongoDB...')
+  // Use the production MongoDB URI
+  const mongoUri = process.env.DATABASE_URL || process.env.MONGODB_URI || 'mongodb://quran_app:QuranAppISLAM2025!@161.35.11.154:27017/quran_reciter'
+  console.log('Connecting to MongoDB at:', mongoUri.replace(/:[^:@]*@/, ':****@')) // Hide password in logs
   
   const client = new MongoClient(mongoUri)
   
@@ -13,7 +13,7 @@ async function updateQuranStructure() {
     await client.connect()
     console.log('Connected to MongoDB')
     
-    const db = client.db('quran-reciter-platform')
+    const db = client.db('quran_reciter')
     
     // Load the complete Juz/Hizb/Quarter structure
     const structureData = JSON.parse(fs.readFileSync(path.join(__dirname, 'quran_juz_hizb_rub.json'), 'utf8'))

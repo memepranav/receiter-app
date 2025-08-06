@@ -34,24 +34,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem('admin_token')
+      console.log('🔍 Auth Check:', { hasToken: !!token, tokenLength: token?.length })
+      
       if (!token) {
+        console.log('❌ No token found, user not authenticated')
         setIsLoading(false)
         return
       }
 
-      // TODO: Replace with actual API call to verify token
+      console.log('🔄 Verifying token with backend...')
       const response = await fetch('/api/admin/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       })
 
+      console.log('📡 Auth response:', { status: response.status, ok: response.ok })
+
       if (response.ok) {
         const userData = await response.json()
+        console.log('✅ Auth successful:', userData)
         // Handle the wrapped response structure from NestJS
         const user = userData.data || userData
         setUser(user)
       } else {
+        console.log('❌ Auth failed, removing token')
         localStorage.removeItem('admin_token')
       }
     } catch (error) {
@@ -65,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsLoading(true)
     try {
-      // TODO: Replace with actual API call
+      console.log('🔐 Attempting login for:', email)
       const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: {
@@ -74,17 +81,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       })
 
+      console.log('📡 Login response:', { status: response.status, ok: response.ok })
+
       if (!response.ok) {
+        const errorData = await response.json()
+        console.log('❌ Login failed:', errorData)
         throw new Error('Invalid credentials')
       }
 
       const data = await response.json()
+      console.log('✅ Login successful:', data)
+      
       // Handle the wrapped response structure from NestJS
       const responseData = data.data || data
-      localStorage.setItem('admin_token', responseData.accessToken || responseData.token)
+      const token = responseData.accessToken || responseData.token
+      
+      console.log('💾 Storing token:', { hasToken: !!token, tokenLength: token?.length })
+      localStorage.setItem('admin_token', token)
       setUser(responseData.user)
       router.push('/dashboard')
     } catch (error) {
+      console.error('Login error:', error)
       throw error
     } finally {
       setIsLoading(false)

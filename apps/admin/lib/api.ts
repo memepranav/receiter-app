@@ -8,6 +8,14 @@ export class ApiClient {
 
   private getAuthHeaders(): HeadersInit {
     const token = localStorage.getItem('admin_token')
+    
+    // Debug logging
+    console.log('🔑 API Client Debug:', {
+      hasToken: !!token,
+      tokenLength: token?.length || 0,
+      tokenPreview: token?.substring(0, 20) + '...' || 'No token'
+    })
+    
     return {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` })

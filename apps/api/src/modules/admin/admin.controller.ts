@@ -34,6 +34,19 @@ import { AdminQueryDto } from './dto/admin-query.dto';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  // Test endpoint (no auth required)
+  @ApiOperation({ summary: 'Test admin API routing' })
+  @ApiResponse({ status: 200, description: 'Test successful' })
+  @Public()
+  @Get('test')
+  async testApi() {
+    return { 
+      message: 'Admin API is working!', 
+      timestamp: new Date().toISOString(),
+      server: 'NestJS Backend'
+    };
+  }
+
   // Dashboard & Overview
   @ApiOperation({ summary: 'Get admin dashboard overview' })
   @ApiResponse({ status: 200, description: 'Dashboard data retrieved successfully' })

@@ -51,12 +51,21 @@ export default function UsersPage() {
     refetch()
   }
 
+  // Debug logging
+  React.useEffect(() => {
+    if (data) {
+      console.log('🔍 Users Page - Data structure:', data)
+      console.log('🔍 Users Page - Data keys:', Object.keys(data))
+      console.log('🔍 Users Page - Stats:', data?.stats)
+    }
+  }, [data])
+
   // Format stats cards with real data
   const statsCards = [
     {
       icon: Users,
       title: 'Total Users',
-      value: data?.stats.totalUsers?.toLocaleString() || '0',
+      value: data?.stats?.totalUsers?.toLocaleString() || data?.pagination?.total?.toLocaleString() || '0',
       change: '+12%',
       bgColor: 'bg-slate-200',
       textColor: 'text-slate-800'
@@ -64,7 +73,7 @@ export default function UsersPage() {
     {
       icon: BarChart3,
       title: 'Active Users',
-      value: data?.stats.activeUsers?.toLocaleString() || '0',
+      value: data?.stats?.activeUsers?.toLocaleString() || '0',
       change: '+8%',
       bgColor: 'gradient-primary',
       textColor: 'text-white'
@@ -72,7 +81,7 @@ export default function UsersPage() {
     {
       icon: Coins,
       title: 'Total Points',
-      value: data?.stats.totalPoints ? `${Math.round(data.stats.totalPoints / 1000)}K` : '0',
+      value: data?.stats?.totalPoints ? `${Math.round(data.stats.totalPoints / 1000)}K` : '0',
       change: '+23%',
       bgColor: 'gradient-secondary',
       textColor: 'text-white'

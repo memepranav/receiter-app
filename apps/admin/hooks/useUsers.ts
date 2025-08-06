@@ -60,6 +60,9 @@ export function useUsers({ search = '', status = 'all', limit = 50, skip = 0 }: 
 
       const result = await apiClient.get('/api/admin/users', params)
       const data = unwrapApiResponse(result)
+      console.log('🔍 API Response Structure:', JSON.stringify(data, null, 2))
+      console.log('🔍 Data keys:', Object.keys(data || {}))
+      console.log('🔍 Stats object:', data?.stats)
       setData(data)
     } catch (err: any) {
       setError(err.message || 'Network error occurred')

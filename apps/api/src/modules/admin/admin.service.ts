@@ -134,24 +134,48 @@ export class AdminService {
     if (status) filter.isActive = status === 'active';
     if (role) filter.role = role;
 
-    const users = await this.userModel
-      .find(filter)
-      .select('-password -googleId')
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip(skip)
-      .exec();
-
-    const total = await this.userModel.countDocuments(filter).exec();
+    const [users, total, totalUsers, activeUsers, totalPointsResult] = await Promise.all([
+      this.userModel
+        .find(filter)
+        .select('-password -googleId')
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip)
+        .exec(),
+      this.userModel.countDocuments(filter).exec(),
+      this.userModel.countDocuments().exec(),
+      this.userModel.countDocuments({ isActive: true }).exec(),
+      this.userModel.aggregate([
+        { $group: { _id: null, totalPoints: { $sum: "$rewardPoints" } } }
+      ]).exec()
+    ]);
 
     return {
-      users,
+      users: users.map(user => ({
+        id: user._id.toString(),
+        name: user.name || 'Unknown User',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        joinDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : 'Unknown',
+        status: user.isActive ? 'active' : 'inactive',
+        points: user.rewardPoints || 0,
+        juzCompleted: user.totalJuzCompleted || 0,
+        country: user.metadata?.country || 'Unknown',
+        authProvider: user.authProvider || 'local',
+        isEmailVerified: user.isEmailVerified || false,
+        lastLoginAt: user.lastLoginAt || null
+      })),
       pagination: {
         page,
         limit,
         total,
         pages: Math.ceil(total / limit),
       },
+      stats: {
+        totalUsers: totalUsers,
+        activeUsers: activeUsers,
+        totalPoints: totalPointsResult[0]?.totalPoints || 0
+      }
     };
   }
 

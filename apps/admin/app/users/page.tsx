@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { AdminLayout } from '@/components/layout/admin-layout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,83 +18,10 @@ import {
   Edit,
   MoreHorizontal,
   ChevronDown,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react'
-
-
-const statsCards = [
-  {
-    icon: Users,
-    title: 'Total Users',
-    value: '2,543',
-    change: '+12%',
-    bgColor: 'bg-slate-200',
-    textColor: 'text-slate-800'
-  },
-  {
-    icon: BarChart3,
-    title: 'Active Users',
-    value: '1,834',
-    change: '+8%',
-    bgColor: 'gradient-primary',
-    textColor: 'text-white'
-  },
-  {
-    icon: Coins,
-    title: 'Total Points',
-    value: '456K',
-    change: '+23%',
-    bgColor: 'gradient-secondary',
-    textColor: 'text-white'
-  }
-]
-
-const users = [
-  {
-    id: 1,
-    name: 'أحمد محمد',
-    email: 'ahmed@example.com',
-    phone: '+966501234567',
-    joinDate: '2024-01-15',
-    status: 'active',
-    points: 2450,
-    juzCompleted: 8,
-    country: 'Saudi Arabia'
-  },
-  {
-    id: 2,
-    name: 'فاطمة علي',
-    email: 'fatima@example.com',
-    phone: '+966507654321',
-    joinDate: '2024-02-20',
-    status: 'active',
-    points: 3750,
-    juzCompleted: 12,
-    country: 'UAE'
-  },
-  {
-    id: 3,
-    name: 'محمد حسن',
-    email: 'mohammed@example.com',
-    phone: '+966508765432',
-    joinDate: '2024-01-10',
-    status: 'inactive',
-    points: 1200,
-    juzCompleted: 3,
-    country: 'Kuwait'
-  },
-  {
-    id: 4,
-    name: 'عائشة أحمد',
-    email: 'aisha@example.com',
-    phone: '+966509876543',
-    joinDate: '2024-03-05',
-    status: 'active',
-    points: 1890,
-    juzCompleted: 5,
-    country: 'Egypt'
-  }
-]
+import { useUsers } from '@/hooks/useUsers'
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -110,6 +37,74 @@ const getStatusBadge = (status: string) => {
 }
 
 export default function UsersPage() {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  
+  // Fetch users data from MongoDB
+  const { data, loading, error, refetch } = useUsers({ 
+    search: searchTerm, 
+    status: statusFilter 
+  })
+
+  // Handle search
+  const handleSearch = () => {
+    refetch()
+  }
+
+  // Format stats cards with real data
+  const statsCards = [
+    {
+      icon: Users,
+      title: 'Total Users',
+      value: data?.stats.totalUsers?.toLocaleString() || '0',
+      change: '+12%',
+      bgColor: 'bg-slate-200',
+      textColor: 'text-slate-800'
+    },
+    {
+      icon: BarChart3,
+      title: 'Active Users',
+      value: data?.stats.activeUsers?.toLocaleString() || '0',
+      change: '+8%',
+      bgColor: 'gradient-primary',
+      textColor: 'text-white'
+    },
+    {
+      icon: Coins,
+      title: 'Total Points',
+      value: data?.stats.totalPoints ? `${Math.round(data.stats.totalPoints / 1000)}K` : '0',
+      change: '+23%',
+      bgColor: 'gradient-secondary',
+      textColor: 'text-white'
+    }
+  ]
+
+  if (loading && !data) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+            <p className="text-slate-600">Loading users...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    )
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error: {error}</p>
+            <Button onClick={refetch}>Try Again</Button>
+          </div>
+        </div>
+      </AdminLayout>
+    )
+  }
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -120,7 +115,6 @@ export default function UsersPage() {
               <h1 className="text-2xl font-bold text-slate-800">User Management</h1>
               <p className="text-sm text-slate-600">Manage and monitor all Quran Reciter app users</p>
             </div>
-
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -159,9 +153,6 @@ export default function UsersPage() {
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
-              <Button className="bg-primary hover:bg-primary-hover text-white">
-                Add New User
-              </Button>
             </div>
           </div>
 
@@ -173,6 +164,8 @@ export default function UsersPage() {
                 <input
                   type="text"
                   placeholder="Search by name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full border border-slate-300 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -180,10 +173,15 @@ export default function UsersPage() {
             
             <div>
               <label className="text-sm text-slate-600 block mb-2">Status</label>
-              <div className="flex items-center justify-between border border-slate-300 rounded-lg px-3 py-2">
-                <span className="text-sm text-slate-500">All Status</span>
-                <ChevronDown className="h-4 w-4 text-slate-500" />
-              </div>
+              <select 
+                value={statusFilter} 
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
             </div>
             
             <div>
@@ -196,7 +194,12 @@ export default function UsersPage() {
             
             <div>
               <label className="text-sm text-slate-600 block mb-2">Action</label>
-              <Button className="w-full bg-primary hover:bg-primary-hover text-white">
+              <Button 
+                onClick={handleSearch} 
+                className="w-full bg-primary hover:bg-primary-hover text-white"
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Search Users
               </Button>
             </div>
@@ -206,9 +209,11 @@ export default function UsersPage() {
         {/* Users Table */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-800">Users List ({users.length} total)</h3>
+            <h3 className="text-lg font-semibold text-slate-800">
+              Users List ({data?.pagination.total || 0} total)
+            </h3>
             <div className="text-sm text-slate-600">
-              Showing 1-{users.length} of {users.length} users
+              Showing {Math.min(data?.users?.length || 0, data?.pagination.total || 0)} of {data?.pagination.total || 0} users
             </div>
           </div>
 
@@ -226,69 +231,101 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-slate-50">
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
-                          <span className="text-sm font-medium text-white">
-                            {user.name.charAt(0)}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-slate-800">{user.name}</div>
-                          <div className="text-sm text-slate-500">{user.country}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="text-sm text-slate-800">{user.email}</div>
-                        <div className="text-sm text-slate-500">{user.phone}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(user.status)}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="text-sm font-medium text-slate-800">
-                          {user.juzCompleted}/30 Juz
-                        </div>
-                        <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
-                          <div 
-                            className="bg-primary h-1.5 rounded-full" 
-                            style={{ width: `${(user.juzCompleted / 30) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium text-slate-800">
-                        {user.points.toLocaleString()}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm text-slate-600">{user.joinDate}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-1">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
+                {data?.users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <div className="text-slate-500">
+                        {searchTerm || statusFilter !== 'all' ? 'No users found matching your search.' : 'No users found.'}
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  data?.users.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-slate-50">
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
+                            <span className="text-sm font-medium text-white">
+                              {user.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="font-medium text-slate-800">{user.name}</div>
+                            <div className="text-sm text-slate-500 flex items-center gap-1">
+                              {user.country}
+                              {user.authProvider === 'google' && (
+                                <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">Google</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="text-sm text-slate-800 flex items-center gap-1">
+                            {user.email}
+                            {user.isEmailVerified && (
+                              <span className="text-xs bg-green-100 text-green-600 px-1.5 py-0.5 rounded">✓</span>
+                            )}
+                          </div>
+                          <div className="text-sm text-slate-500">{user.phone || 'No phone'}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(user.status)}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="text-sm font-medium text-slate-800">
+                            {user.juzCompleted}/30 Juz
+                          </div>
+                          <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
+                            <div 
+                              className="bg-primary h-1.5 rounded-full" 
+                              style={{ width: `${Math.min((user.juzCompleted / 30) * 100, 100)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium text-slate-800">
+                          {user.points.toLocaleString()}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-slate-600">{user.joinDate}</div>
+                        {user.lastLoginAt && (
+                          <div className="text-xs text-slate-500">
+                            Last: {new Date(user.lastLoginAt).toLocaleDateString()}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <Button variant="ghost" size="sm" title="View Details">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" title="Edit User">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" title="More Actions">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
+
+          {/* Loading overlay for table refresh */}
+          {loading && data && (
+            <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          )}
         </Card>
       </div>
     </AdminLayout>

@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { User, ChevronDown, LogOut } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { useClickOutside } from '@/hooks/useClickOutside'
@@ -8,6 +10,7 @@ import { useClickOutside } from '@/hooks/useClickOutside'
 export function AdminHeader() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { user, logout } = useAuth()
+  const pathname = usePathname()
   
   // Close dropdown when clicking outside or pressing Escape
   const dropdownRef = useClickOutside<HTMLDivElement>(() => setShowUserMenu(false), showUserMenu)
@@ -29,29 +32,58 @@ export function AdminHeader() {
 
         {/* Navigation Menu */}
         <nav className="flex items-center space-x-8">
-          <button className="text-sm font-medium text-white">
+          <Link 
+            href="/dashboard" 
+            className={`text-sm font-medium transition-colors ${
+              pathname === '/dashboard' ? 'text-white' : 'text-gray-300 hover:text-white'
+            }`}
+          >
             Home
-          </button>
-          <button className="text-sm text-gray-300 hover:text-white">
+          </Link>
+          <Link 
+            href="/users" 
+            className={`text-sm font-medium transition-colors ${
+              pathname === '/users' ? 'text-white' : 'text-gray-300 hover:text-white'
+            }`}
+          >
             Users
-          </button>
-          <button className="text-sm text-gray-300 hover:text-white">
+          </Link>
+          <Link 
+            href="/analytics" 
+            className={`text-sm font-medium transition-colors ${
+              pathname === '/analytics' ? 'text-white' : 'text-gray-300 hover:text-white'
+            }`}
+          >
             Analytics
-          </button>
-          <div className="flex items-center space-x-1 text-sm text-gray-300 hover:text-white">
+          </Link>
+          <div className="flex items-center space-x-1 text-sm text-gray-300 hover:text-white cursor-pointer">
             <span>Rewards</span>
             <ChevronDown className="h-4 w-4" />
           </div>
-          <div className="flex items-center space-x-1 text-sm text-gray-300 hover:text-white">
-            <span>Content</span>
-            <ChevronDown className="h-4 w-4" />
-          </div>
-          <button className="text-sm text-gray-300 hover:text-white">
+          <Link 
+            href="/content" 
+            className={`text-sm font-medium transition-colors ${
+              pathname === '/content' ? 'text-white' : 'text-gray-300 hover:text-white'
+            }`}
+          >
+            Content
+          </Link>
+          <Link 
+            href="/reports" 
+            className={`text-sm font-medium transition-colors ${
+              pathname === '/reports' ? 'text-white' : 'text-gray-300 hover:text-white'
+            }`}
+          >
             Reports
-          </button>
-          <button className="text-sm text-gray-300 hover:text-white">
+          </Link>
+          <Link 
+            href="/settings" 
+            className={`text-sm font-medium transition-colors ${
+              pathname === '/settings' ? 'text-white' : 'text-gray-300 hover:text-white'
+            }`}
+          >
             Settings
-          </button>
+          </Link>
         </nav>
 
         {/* Right Side */}

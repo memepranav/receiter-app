@@ -11,8 +11,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 
-// User schema import (will be created when Users module is created)
+// User and Admin schema imports
 import { User, UserSchema } from '../users/schemas/user.schema';
+import { Admin, AdminSchema } from '../admin/schemas/admin.schema';
 
 // Core modules
 import { RedisModule } from '../../core/redis/redis.module';
@@ -33,7 +34,10 @@ import { EmailModule } from '../../core/email/email.module';
         },
       }),
     }),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Admin.name, schema: AdminSchema },
+    ]),
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

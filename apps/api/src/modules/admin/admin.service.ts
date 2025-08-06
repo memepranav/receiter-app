@@ -73,6 +73,49 @@ export class AdminService {
   }
 
   /**
+   * Get recent users
+   */
+  async getRecentUsers(limit: number = 10): Promise<any> {
+    const users = await this.userModel
+      .find()
+      .select('-password -googleId')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .exec();
+
+    // Get stats for summary
+    const [totalUsers, activeUsers, totalPointsResult] = await Promise.all([
+      this.userModel.countDocuments().exec(),
+      this.userModel.countDocuments({ isActive: true }).exec(),
+      this.userModel.aggregate([
+        { $group: { _id: null, totalPoints: { $sum: "$rewardPoints" } } }
+      ]).exec()
+    ]);
+
+    return {
+      users: users.map(user => ({
+        id: user._id.toString(),
+        name: user.name || 'Unknown User',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        joinDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : 'Unknown',
+        status: user.isActive ? 'active' : 'inactive',
+        points: user.rewardPoints || 0,
+        juzCompleted: user.totalJuzCompleted || 0,
+        country: user.metadata?.country || 'Unknown',
+        authProvider: user.authProvider || 'local',
+        isEmailVerified: user.isEmailVerified || false,
+        lastLoginAt: user.lastLoginAt || null
+      })),
+      stats: {
+        totalUsers: totalUsers,
+        activeUsers: activeUsers,
+        totalPoints: totalPointsResult[0]?.totalPoints || 0
+      }
+    };
+  }
+
+  /**
    * Get users with pagination and filters
    */
   async getUsers(query: AdminQueryDto): Promise<any> {
@@ -465,6 +508,34 @@ export class AdminService {
     this.loggerService.logUserActivity('admin_settings_updated', adminId, settings);
 
     return { message: 'Settings updated successfully', settings };
+  }
+
+  /**
+   * Get Quran content for admin
+   */
+  async getQuranContent(query: any): Promise<any> {
+    // This would typically use your Quran service or connect to Quran database
+    // For now, returning a basic structure - you should integrate with your actual Quran data source
+    const { juz, hizb, quarter } = query;
+
+    // If no parameters, return structure overview
+    if (!juz && !hizb && !quarter) {
+      return {
+        structure: {
+          totalAyahs: 6236,
+          totalJuz: 30,
+          totalHizb: 60,
+          totalQuarters: 240
+        }
+      };
+    }
+
+    // TODO: Implement actual Quran content retrieval based on your database structure
+    // This should integrate with your existing Quran data service
+    return {
+      message: 'Quran content retrieval - integrate with your Quran service',
+      query
+    };
   }
 
   /**

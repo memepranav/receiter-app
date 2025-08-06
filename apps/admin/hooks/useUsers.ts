@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiClient, unwrapApiResponse } from '@/lib/api'
 
 interface User {
   id: string
@@ -55,16 +56,11 @@ export function useUsers({ search = '', status = 'all', limit = 50, skip = 0 }: 
       params.append('limit', limit.toString())
       params.append('skip', skip.toString())
 
-      const response = await fetch(`/api/admin/users?${params.toString()}`)
-      const result = await response.json()
-
-      if (result.success) {
-        setData(result.data)
-      } else {
-        setError(result.message || 'Failed to fetch users')
-      }
-    } catch (err) {
-      setError('Network error occurred')
+      const result = await apiClient.get('/api/admin/users', params)
+      const data = unwrapApiResponse(result)
+      setData(data)
+    } catch (err: any) {
+      setError(err.message || 'Network error occurred')
       console.error('Error fetching users:', err)
     } finally {
       setLoading(false)

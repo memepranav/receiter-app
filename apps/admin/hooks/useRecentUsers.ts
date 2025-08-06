@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiClient, unwrapApiResponse } from '@/lib/api'
 
 interface User {
   id: string
@@ -36,16 +37,14 @@ export function useRecentUsers(limit: number = 10) {
       setLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/admin/users/recent?limit=${limit}`)
-      const result = await response.json()
+      const params = new URLSearchParams()
+      params.append('limit', limit.toString())
 
-      if (result.success) {
-        setData(result.data)
-      } else {
-        setError(result.message || 'Failed to fetch recent users')
-      }
-    } catch (err) {
-      setError('Network error occurred')
+      const result = await apiClient.get('/api/admin/users/recent', params)
+      const data = unwrapApiResponse(result)
+      setData(data)
+    } catch (err: any) {
+      setError(err.message || 'Network error occurred')
       console.error('Error fetching recent users:', err)
     } finally {
       setLoading(false)

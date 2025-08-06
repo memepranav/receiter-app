@@ -50,6 +50,13 @@ export class AdminController {
     return this.adminService.getUsers(query);
   }
 
+  @ApiOperation({ summary: 'Get recent users' })
+  @ApiResponse({ status: 200, description: 'Recent users retrieved successfully' })
+  @Get('users/recent')
+  async getRecentUsers(@Query('limit') limit?: string) {
+    return this.adminService.getRecentUsers(parseInt(limit || '10'));
+  }
+
   @ApiOperation({ summary: 'Get specific user by ID' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully' })
   @Get('users/:userId')
@@ -186,6 +193,13 @@ export class AdminController {
   }
 
   // Content Management
+  @ApiOperation({ summary: 'Get Quran content for admin' })
+  @ApiResponse({ status: 200, description: 'Quran content retrieved successfully' })
+  @Get('content/quran')
+  async getQuranContent(@Query() query: any) {
+    return this.adminService.getQuranContent(query);
+  }
+
   @ApiOperation({ summary: 'Get content statistics' })
   @ApiResponse({ status: 200, description: 'Content stats retrieved successfully' })
   @Get('content/stats')

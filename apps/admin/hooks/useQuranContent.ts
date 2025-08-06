@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiClient, unwrapApiResponse } from '@/lib/api'
 
 interface QuranStructure {
   totalAyahs: number
@@ -66,16 +67,11 @@ export function useQuranContent(juz?: number, hizb?: number, quarter?: number) {
       if (hizb) params.append('hizb', hizb.toString())
       if (quarter) params.append('quarter', quarter.toString())
 
-      const response = await fetch(`/api/admin/content/quran?${params.toString()}`)
-      const result = await response.json()
-
-      if (result.success) {
-        setData(result.data)
-      } else {
-        setError(result.message || 'Failed to fetch Quran content')
-      }
-    } catch (err) {
-      setError('Network error occurred')
+      const result = await apiClient.get('/api/admin/content/quran', params)
+      const data = unwrapApiResponse(result)
+      setData(data)
+    } catch (err: any) {
+      setError(err.message || 'Network error occurred')
       console.error('Error fetching Quran content:', err)
     } finally {
       setLoading(false)

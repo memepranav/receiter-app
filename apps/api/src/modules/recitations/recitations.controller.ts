@@ -173,17 +173,68 @@ export class RecitationsController {
 
   // ==================== HIERARCHICAL STRUCTURE ENDPOINTS ====================
 
-  @ApiOperation({ summary: 'Get Quran structure overview' })
-  @ApiResponse({ status: 200, description: 'Structure overview retrieved successfully' })
+  @ApiOperation({ 
+    summary: 'Get Quran structure overview',
+    description: 'Returns the complete hierarchical structure: 30 Juz → 60 Hizb → 240 Rubʿ al-Hizb → 6,236 Ayahs'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Structure overview retrieved successfully',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          totalAyahs: 6236,
+          totalJuz: 30,
+          totalHizb: 60,
+          totalQuarters: 240,
+          description: "30 Juz → 60 Hizb → 240 Rubʿ al-Hizb → 6,236 Ayahs"
+        }
+      }
+    }
+  })
   @Get('structure')
   async getQuranStructure(@GetUser() user: AuthenticatedUser) {
     return this.recitationsService.getQuranStructure();
   }
 
-  @ApiOperation({ summary: 'Get Hizb list for a specific Juz' })
-  @ApiResponse({ status: 200, description: 'Hizb list retrieved successfully' })
+  @ApiOperation({ 
+    summary: 'Get Hizb list for a specific Juz',
+    description: 'Returns all Hizb (halves) within a specific Juz, each containing 4 quarters'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Hizb list retrieved successfully',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          juzNumber: 1,
+          hizbs: [
+            {
+              hizbNumber: 1,
+              ayahCount: 148,
+              quarterCount: 4,
+              surahs: [
+                { surah: 1, surahName: "الفاتحة" },
+                { surah: 2, surahName: "البقرة" }
+              ]
+            },
+            {
+              hizbNumber: 2,
+              ayahCount: 111,
+              quarterCount: 4,
+              surahs: [
+                { surah: 2, surahName: "البقرة" }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  })
   @ApiResponse({ status: 404, description: 'Juz not found' })
-  @ApiParam({ name: 'juzNumber', description: 'Juz number (1-30)' })
+  @ApiParam({ name: 'juzNumber', description: 'Juz number (1-30)', example: 1 })
   @Get('juz/:juzNumber/hizbs')
   async getHizbsForJuz(
     @Param('juzNumber', ParseIntPipe) juzNumber: number,
@@ -192,11 +243,44 @@ export class RecitationsController {
     return this.recitationsService.getHizbsForJuz(juzNumber, user.id);
   }
 
-  @ApiOperation({ summary: 'Get specific Hizb content' })
-  @ApiResponse({ status: 200, description: 'Hizb retrieved successfully' })
+  @ApiOperation({ 
+    summary: 'Get specific Hizb content',
+    description: 'Returns content of a specific Hizb within a Juz, optionally including full ayah text'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Hizb retrieved successfully',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          juzNumber: 1,
+          hizbNumber: 1,
+          ayahCount: 148,
+          quarterCount: 4,
+          surahs: [
+            { surah: 1, surahName: "الفاتحة" },
+            { surah: 2, surahName: "البقرة" }
+          ],
+          ayahs: [
+            {
+              id: "1:1",
+              surah: 1,
+              surahName: "الفاتحة",
+              ayah: 1,
+              text: "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+              juz: 1,
+              hizb: 1,
+              quarter: 1
+            }
+          ]
+        }
+      }
+    }
+  })
   @ApiResponse({ status: 404, description: 'Hizb not found' })
-  @ApiParam({ name: 'juzNumber', description: 'Juz number (1-30)' })
-  @ApiParam({ name: 'hizbNumber', description: 'Hizb number (1-60)' })
+  @ApiParam({ name: 'juzNumber', description: 'Juz number (1-30)', example: 1 })
+  @ApiParam({ name: 'hizbNumber', description: 'Hizb number (1-60)', example: 1 })
   @Get('juz/:juzNumber/hizb/:hizbNumber')
   async getHizb(
     @Param('juzNumber', ParseIntPipe) juzNumber: number,
@@ -207,11 +291,49 @@ export class RecitationsController {
     return this.recitationsService.getHizb(juzNumber, hizbNumber, query, user.id);
   }
 
-  @ApiOperation({ summary: 'Get Rubʿ (quarters) list for a specific Hizb' })
-  @ApiResponse({ status: 200, description: 'Rubʿ list retrieved successfully' })
+  @ApiOperation({ 
+    summary: 'Get Rubʿ (quarters) list for a specific Hizb',
+    description: 'Returns all 4 Rubʿ al-Hizb (quarters) within a specific Hizb, with ayah ranges'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Rubʿ list retrieved successfully',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          juzNumber: 1,
+          hizbNumber: 1,
+          quarters: [
+            {
+              quarterNumber: 1,
+              ayahCount: 37,
+              surahs: [
+                { surah: 1, surahName: "الفاتحة" },
+                { surah: 2, surahName: "البقرة" }
+              ],
+              range: {
+                start: { surah: 1, surahName: "الفاتحة", ayah: 1 },
+                end: { surah: 2, surahName: "البقرة", ayah: 30 }
+              }
+            },
+            {
+              quarterNumber: 2,
+              ayahCount: 37,
+              surahs: [{ surah: 2, surahName: "البقرة" }],
+              range: {
+                start: { surah: 2, surahName: "البقرة", ayah: 31 },
+                end: { surah: 2, surahName: "البقرة", ayah: 67 }
+              }
+            }
+          ]
+        }
+      }
+    }
+  })
   @ApiResponse({ status: 404, description: 'Hizb not found' })
-  @ApiParam({ name: 'juzNumber', description: 'Juz number (1-30)' })
-  @ApiParam({ name: 'hizbNumber', description: 'Hizb number (1-60)' })
+  @ApiParam({ name: 'juzNumber', description: 'Juz number (1-30)', example: 1 })
+  @ApiParam({ name: 'hizbNumber', description: 'Hizb number (1-60)', example: 1 })
   @Get('juz/:juzNumber/hizb/:hizbNumber/quarters')
   async getQuartersForHizb(
     @Param('juzNumber', ParseIntPipe) juzNumber: number,
@@ -221,12 +343,53 @@ export class RecitationsController {
     return this.recitationsService.getQuartersForHizb(juzNumber, hizbNumber, user.id);
   }
 
-  @ApiOperation({ summary: 'Get specific Rubʿ al-Hizb (quarter) content with ayahs' })
-  @ApiResponse({ status: 200, description: 'Rubʿ al-Hizb retrieved successfully' })
+  @ApiOperation({ 
+    summary: 'Get specific Rubʿ al-Hizb (quarter) content with ayahs',
+    description: 'Returns complete content of a specific quarter including all ayahs, translations, and audio support'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Rubʿ al-Hizb retrieved successfully',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          juzNumber: 1,
+          hizbNumber: 1,
+          quarterNumber: 1,
+          rubAlHizb: "Rubʿ 1",
+          ayahCount: 37,
+          surahs: [
+            { surah: 1, surahName: "الفاتحة" },
+            { surah: 2, surahName: "البقرة" }
+          ],
+          range: {
+            start: { surah: 1, surahName: "الفاتحة", ayah: 1 },
+            end: { surah: 2, surahName: "البقرة", ayah: 30 }
+          },
+          ayahs: [
+            {
+              id: "1:1",
+              surah: 1,
+              surahName: "الفاتحة",
+              ayah: 1,
+              text: "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+              translation: "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
+              juz: 1,
+              hizb: 1,
+              quarter: 1,
+              page: 1,
+              sajda: false
+            }
+          ]
+        }
+      }
+    }
+  })
   @ApiResponse({ status: 404, description: 'Rubʿ al-Hizb not found' })
-  @ApiParam({ name: 'juzNumber', description: 'Juz number (1-30)' })
-  @ApiParam({ name: 'hizbNumber', description: 'Hizb number (1-60)' })
-  @ApiParam({ name: 'quarterNumber', description: 'Quarter number (1-4)' })
+  @ApiParam({ name: 'juzNumber', description: 'Juz number (1-30)', example: 1 })
+  @ApiParam({ name: 'hizbNumber', description: 'Hizb number (1-60)', example: 1 })
+  @ApiParam({ name: 'quarterNumber', description: 'Quarter number (1-4)', example: 1 })
   @Get('juz/:juzNumber/hizb/:hizbNumber/quarter/:quarterNumber')
   async getQuarter(
     @Param('juzNumber', ParseIntPipe) juzNumber: number,

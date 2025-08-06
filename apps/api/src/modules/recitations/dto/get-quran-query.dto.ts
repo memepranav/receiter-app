@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsBoolean, Transform } from 'class-validator';
+import { IsOptional, IsString, IsBoolean } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class GetQuranQueryDto {
   @ApiProperty({

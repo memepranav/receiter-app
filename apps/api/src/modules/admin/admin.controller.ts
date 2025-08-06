@@ -38,7 +38,7 @@ export class AdminController {
   // Test endpoint (no auth required)
   @ApiOperation({ summary: 'Test admin API routing' })
   @ApiResponse({ status: 200, description: 'Test successful' })
-  @Public()
+  @UseGuards() // Override class-level guards with no guards
   @Get('test')
   async testApi() {
     return { 

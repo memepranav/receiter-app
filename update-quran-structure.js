@@ -3,7 +3,11 @@ const fs = require('fs')
 const path = require('path')
 
 async function updateQuranStructure() {
-  const client = new MongoClient(process.env.MONGODB_URI || 'mongodb://localhost:27017')
+  // Use the same MongoDB URI as your application
+  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/quran-reciter-platform'
+  console.log('Connecting to MongoDB...')
+  
+  const client = new MongoClient(mongoUri)
   
   try {
     await client.connect()

@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Put,
   Body,
   HttpCode,
   HttpStatus,
@@ -57,5 +58,29 @@ export class AdminAuthController {
   @Get('me')
   async getAdminProfile(@Request() req) {
     return this.adminAuthService.getAdminProfile(req.user.sub);
+  }
+
+  @ApiOperation({ summary: 'Update admin profile' })
+  @ApiResponse({ status: 200, description: 'Admin profile updated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Put('me')
+  async updateAdminProfile(@Request() req, @Body() updateData: any) {
+    const { profile } = updateData;
+    return this.adminAuthService.updateAdminProfile(req.user.sub, profile);
+  }
+
+  @ApiOperation({ summary: 'Change admin password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(@Request() req, @Body() passwordData: { currentPassword: string; newPassword: string }) {
+    const { currentPassword, newPassword } = passwordData;
+    await this.adminAuthService.changeAdminPassword(req.user.sub, currentPassword, newPassword);
+    return { message: 'Password changed successfully' };
   }
 }

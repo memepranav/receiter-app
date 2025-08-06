@@ -7,7 +7,7 @@ export type AdminDocument = Admin & Document;
   collection: 'admins',
   timestamps: true,
 })
-export class Admin {
+export class Admin extends Document {
   @Prop({ required: true, unique: true, lowercase: true })
   email: string;
 
@@ -76,6 +76,10 @@ export class Admin {
     ],
   })
   permissions: string[];
+
+  // Timestamps (automatically managed by Mongoose)
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export const AdminSchema = SchemaFactory.createForClass(Admin);

@@ -111,31 +111,14 @@ export function AdminHeader() {
 
                 {/* Menu Items */}
                 <div className="py-3">
-                  <button className="flex items-center space-x-3 w-full px-6 py-3 text-white/90 hover:text-white hover:bg-slate-700/50 transition-colors">
+                  <Link
+                    href="/profile"
+                    className="flex items-center space-x-3 w-full px-6 py-3 text-white/90 hover:text-white hover:bg-slate-700/50 transition-colors"
+                    onClick={() => setShowUserMenu(false)}
+                  >
                     <User className="h-5 w-5 text-white/70" />
                     <span className="text-base">My Profile</span>
-                  </button>
-
-                  <button className="flex items-center space-x-3 w-full px-6 py-3 text-white/90 hover:text-white hover:bg-slate-700/50 transition-colors">
-                    <svg className="h-5 w-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <span className="text-base">Admin Services</span>
-                  </button>
-
-                  <button className="flex items-center space-x-3 w-full px-6 py-3 text-white/90 hover:text-white hover:bg-slate-700/50 transition-colors">
-                    <svg className="h-5 w-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <span className="text-base">Change Password</span>
-                  </button>
-
-                  <button className="flex items-center space-x-3 w-full px-6 py-3 text-white/90 hover:text-white hover:bg-slate-700/50 transition-colors">
-                    <svg className="h-5 w-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                    </svg>
-                    <span className="text-base">Switch to Mobile View</span>
-                  </button>
+                  </Link>
 
                   <button
                     onClick={logout}

@@ -157,13 +157,106 @@ export class AdminAuthService {
               `${admin.profile?.firstName} ${admin.profile?.lastName}`.trim() || 
               'Admin User',
         role: admin.role,
+        profile: admin.profile,
+        status: admin.status,
+        security: {
+          lastLoginDate: admin.security?.lastLoginDate,
+          lastActivity: admin.security?.lastActivity,
+        },
         permissions: admin.permissions,
-        lastLoginDate: admin.security?.lastLoginDate,
-        avatar: admin.profile?.avatar,
+        createdAt: admin.createdAt,
+        updatedAt: admin.updatedAt,
       };
     } catch (error) {
       this.loggerService.errorWithContext('Get admin profile error', error.stack);
       throw new UnauthorizedException('Failed to get admin profile');
+    }
+  }
+
+  /**
+   * Update admin profile
+   */
+  async updateAdminProfile(adminId: string, profileData: any): Promise<any> {
+    try {
+      const admin = await this.adminModel.findById(adminId).exec();
+
+      if (!admin) {
+        throw new UnauthorizedException('Admin not found');
+      }
+
+      if (!admin.status.isActive) {
+        throw new UnauthorizedException('Admin account is deactivated');
+      }
+
+      // Update profile
+      const updatedAdmin = await this.adminModel
+        .findByIdAndUpdate(
+          adminId,
+          {
+            $set: {
+              profile: {
+                ...admin.profile,
+                ...profileData,
+              },
+              updatedAt: new Date(),
+            },
+          },
+          { new: true, select: '-password' }
+        )
+        .exec();
+
+      return this.getAdminProfile(adminId);
+    } catch (error) {
+      this.loggerService.errorWithContext('Update admin profile error', error.stack);
+      throw new BadRequestException('Failed to update admin profile');
+    }
+  }
+
+  /**
+   * Change admin password
+   */
+  async changeAdminPassword(adminId: string, currentPassword: string, newPassword: string): Promise<void> {
+    try {
+      const admin = await this.adminModel.findById(adminId).exec();
+
+      if (!admin) {
+        throw new UnauthorizedException('Admin not found');
+      }
+
+      if (!admin.status.isActive) {
+        throw new UnauthorizedException('Admin account is deactivated');
+      }
+
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, admin.password);
+      if (!isCurrentPasswordValid) {
+        throw new UnauthorizedException('Current password is incorrect');
+      }
+
+      // Hash new password
+      const saltRounds = 10;
+      const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+      // Update password
+      await this.adminModel.updateOne(
+        { _id: adminId },
+        {
+          $set: {
+            password: hashedNewPassword,
+            updatedAt: new Date(),
+          },
+        },
+      );
+
+      this.loggerService.logAuthEvent('admin_password_change', adminId, {
+        email: admin.email,
+      });
+    } catch (error) {
+      this.loggerService.errorWithContext('Change admin password error', error.stack);
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new BadRequestException('Failed to change password');
     }
   }
 

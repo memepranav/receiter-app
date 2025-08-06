@@ -5,6 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { AdminController } from './admin.controller';
 import { AdminAuthController } from './admin-auth.controller';
+import { AdminTestController } from './admin-test.controller';
 import { AdminService } from './admin.service';
 import { AdminAuthService } from './services/admin-auth.service';
 
@@ -59,7 +60,7 @@ import { AuthService } from '../auth/auth.service';
     RedisModule,
     EmailModule,
   ],
-  controllers: [AdminController, AdminAuthController],
+  controllers: [AdminController, AdminAuthController, AdminTestController],
   providers: [AdminService, AdminAuthService, AuthService, UsersService, RewardsService, AnalyticsService, BlockchainService],
   exports: [AdminService, AdminAuthService],
 })

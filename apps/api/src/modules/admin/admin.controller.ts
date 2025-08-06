@@ -15,6 +15,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 import { AuthenticatedUser } from '../auth/interfaces/auth.interface';
 import { TransformInterceptor } from '../../common/interceptors/transform.interceptor';
 

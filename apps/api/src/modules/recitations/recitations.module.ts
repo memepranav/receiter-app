@@ -14,6 +14,7 @@ import { Translation, TranslationSchema } from './schemas/translation.schema';
 // Core modules
 import { LoggerModule } from '../../core/logger/logger.module';
 import { RedisModule } from '../../core/redis/redis.module';
+import { DatabaseModule } from '../../core/database/database.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { RedisModule } from '../../core/redis/redis.module';
     ]),
     LoggerModule,
     RedisModule,
+    DatabaseModule,
   ],
   controllers: [RecitationsController],
   providers: [RecitationsService],

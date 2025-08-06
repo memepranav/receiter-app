@@ -9,6 +9,7 @@ import { Translation, TranslationDocument } from './schemas/translation.schema';
 
 import { LoggerService } from '../../core/logger/logger.service';
 import { RedisService } from '../../core/redis/redis.service';
+import { DatabaseService } from '../../core/database/database.service';
 
 import { GetQuranQueryDto } from './dto/get-quran-query.dto';
 
@@ -21,6 +22,7 @@ export class RecitationsService {
     @InjectModel(Translation.name) private translationModel: Model<TranslationDocument>,
     private loggerService: LoggerService,
     private redisService: RedisService,
+    private databaseService: DatabaseService,
   ) {}
 
   /**
@@ -526,5 +528,384 @@ export class RecitationsService {
     }
 
     return `${reciter.audioBaseUrl}/${surahNumber.toString().padStart(3, '0')}.mp3`;
+  }
+
+  // ==================== HIERARCHICAL STRUCTURE METHODS ====================
+
+  /**
+   * Get Quran structure overview (30 Juz → 60 Hizb → 240 Rubʿ)
+   */
+  async getQuranStructure(): Promise<any> {
+    const cacheKey = 'quran:structure:overview';
+    const cached = await this.redisService.get(cacheKey);
+
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    const db = this.databaseService.getConnection().db;
+    const collection = db.collection('quran_ayahs');
+
+    const stats = await Promise.all([
+      collection.countDocuments({}),
+      collection.distinct('juz_number').then(juz => juz.filter(j => j > 0).length),
+      collection.distinct('hizb_number').then(hizb => hizb.filter(h => h > 0).length),
+      collection.aggregate([
+        { $group: { _id: { juz: '$juz_number', hizb: '$hizb_number' } } },
+        { $count: 'total' }
+      ]).toArray().then(result => result[0]?.total * 4 || 0) // Each Hizb has 4 quarters
+    ]);
+
+    const structure = {
+      totalAyahs: stats[0],
+      totalJuz: stats[1],
+      totalHizb: stats[2], 
+      totalQuarters: stats[3], // Each Hizb has 4 Rubʿ
+      description: '30 Juz → 60 Hizb → 240 Rubʿ al-Hizb → 6,236 Ayahs'
+    };
+
+    // Cache for 1 day
+    await this.redisService.set(cacheKey, JSON.stringify(structure), 86400);
+
+    return structure;
+  }
+
+  /**
+   * Get Hizb list for a specific Juz
+   */
+  async getHizbsForJuz(juzNumber: number, userId: string): Promise<any> {
+    if (juzNumber < 1 || juzNumber > 30) {
+      throw new NotFoundException('Invalid Juz number');
+    }
+
+    const cacheKey = `juz:${juzNumber}:hizbs`;
+    const cached = await this.redisService.get(cacheKey);
+
+    if (cached) {
+      this.loggerService.logUserActivity('juz_hizbs_accessed', userId, { juzNumber, cached: true });
+      return JSON.parse(cached);
+    }
+
+    const db = this.databaseService.getConnection().db;
+    const collection = db.collection('quran_ayahs');
+
+    const hizbList = await collection.aggregate([
+      { $match: { juz_number: juzNumber } },
+      {
+        $group: {
+          _id: '$hizb_number',
+          quarterCount: { $addToSet: '$quarter_hizb_segment' },
+          ayahCount: { $sum: 1 },
+          surahs: { $addToSet: { surah: '$sura_number', surahName: '$sura_name_arabic' } }
+        }
+      },
+      {
+        $project: {
+          hizbNumber: '$_id',
+          quarterCount: { $size: '$quarterCount' },
+          ayahCount: 1,
+          surahs: 1
+        }
+      },
+      { $sort: { hizbNumber: 1 } }
+    ]).toArray();
+
+    const result = {
+      juzNumber,
+      hizbs: hizbList.map(hizb => ({
+        hizbNumber: hizb.hizbNumber,
+        ayahCount: hizb.ayahCount,
+        quarterCount: 4, // Always 4 Rubʿ per Hizb
+        surahs: hizb.surahs.sort((a, b) => a.surah - b.surah)
+      }))
+    };
+
+    // Cache for 30 minutes
+    await this.redisService.set(cacheKey, JSON.stringify(result), 1800);
+
+    this.loggerService.logUserActivity('juz_hizbs_accessed', userId, { juzNumber });
+
+    return result;
+  }
+
+  /**
+   * Get specific Hizb content
+   */
+  async getHizb(juzNumber: number, hizbNumber: number, query: GetQuranQueryDto, userId: string): Promise<any> {
+    if (juzNumber < 1 || juzNumber > 30) {
+      throw new NotFoundException('Invalid Juz number');
+    }
+    if (hizbNumber < 1 || hizbNumber > 60) {
+      throw new NotFoundException('Invalid Hizb number');
+    }
+
+    const cacheKey = `juz:${juzNumber}:hizb:${hizbNumber}:${JSON.stringify(query)}`;
+    const cached = await this.redisService.get(cacheKey);
+
+    if (cached) {
+      this.loggerService.logUserActivity('hizb_accessed', userId, { juzNumber, hizbNumber, cached: true });
+      return JSON.parse(cached);
+    }
+
+    const db = this.databaseService.getConnection().db;
+    const collection = db.collection('quran_ayahs');
+
+    // Get all ayahs for this Hizb
+    const ayahs = await collection.find({ 
+      juz_number: juzNumber, 
+      hizb_number: hizbNumber 
+    })
+    .sort({ sura_number: 1, ayah_number: 1 })
+    .toArray();
+
+    if (ayahs.length === 0) {
+      throw new NotFoundException('Hizb not found');
+    }
+
+    // Get unique surahs in this Hizb
+    const surahs = Array.from(new Set(ayahs.map(ayah => ayah.sura_number)))
+      .map(surahNum => {
+        const ayah = ayahs.find(a => a.sura_number === surahNum);
+        return {
+          surah: surahNum,
+          surahName: ayah?.sura_name_arabic || ''
+        };
+      })
+      .sort((a, b) => a.surah - b.surah);
+
+    const result = {
+      juzNumber,
+      hizbNumber,
+      ayahCount: ayahs.length,
+      quarterCount: 4,
+      surahs,
+      ayahs: query.includeText ? ayahs.map(ayah => ({
+        id: ayah._id,
+        surah: ayah.sura_number,
+        surahName: ayah.sura_name_arabic,
+        ayah: ayah.ayah_number,
+        text: ayah.ayah_text_arabic,
+        juz: ayah.juz_number,
+        hizb: ayah.hizb_number,
+        quarter: parseInt(ayah.quarter_hizb_segment)
+      })) : undefined
+    };
+
+    // Cache for 30 minutes
+    await this.redisService.set(cacheKey, JSON.stringify(result), 1800);
+
+    this.loggerService.logUserActivity('hizb_accessed', userId, { juzNumber, hizbNumber });
+
+    return result;
+  }
+
+  /**
+   * Get Rubʿ (quarters) list for a specific Hizb
+   */
+  async getQuartersForHizb(juzNumber: number, hizbNumber: number, userId: string): Promise<any> {
+    if (juzNumber < 1 || juzNumber > 30) {
+      throw new NotFoundException('Invalid Juz number');
+    }
+    if (hizbNumber < 1 || hizbNumber > 60) {
+      throw new NotFoundException('Invalid Hizb number');
+    }
+
+    const cacheKey = `juz:${juzNumber}:hizb:${hizbNumber}:quarters`;
+    const cached = await this.redisService.get(cacheKey);
+
+    if (cached) {
+      this.loggerService.logUserActivity('hizb_quarters_accessed', userId, { juzNumber, hizbNumber, cached: true });
+      return JSON.parse(cached);
+    }
+
+    const db = this.databaseService.getConnection().db;
+    const collection = db.collection('quran_ayahs');
+
+    // Get all ayahs for this Hizb
+    const allAyahs = await collection.find({ 
+      juz_number: juzNumber, 
+      hizb_number: hizbNumber 
+    })
+    .sort({ sura_number: 1, ayah_number: 1 })
+    .toArray();
+
+    if (allAyahs.length === 0) {
+      throw new NotFoundException('Hizb not found');
+    }
+
+    // Divide ayahs into 4 quarters (Rubʿ al-Hizb)
+    const totalAyahs = allAyahs.length;
+    const ayahsPerQuarter = Math.ceil(totalAyahs / 4);
+    
+    const quarters = [];
+    
+    for (let i = 0; i < 4; i++) {
+      const startIndex = i * ayahsPerQuarter;
+      const endIndex = Math.min((i + 1) * ayahsPerQuarter, totalAyahs);
+      const quarterAyahs = allAyahs.slice(startIndex, endIndex);
+      
+      if (quarterAyahs.length > 0) {
+        const firstAyah = quarterAyahs[0];
+        const lastAyah = quarterAyahs[quarterAyahs.length - 1];
+        
+        // Get unique surahs in this quarter
+        const surahs = Array.from(new Set(quarterAyahs.map(ayah => ayah.sura_number)))
+          .map(surahNum => {
+            const ayah = quarterAyahs.find(a => a.sura_number === surahNum);
+            return {
+              surah: surahNum,
+              surahName: ayah?.sura_name_arabic || ''
+            };
+          })
+          .sort((a, b) => a.surah - b.surah);
+        
+        quarters.push({
+          quarterNumber: i + 1,
+          ayahCount: quarterAyahs.length,
+          surahs: surahs,
+          range: {
+            start: {
+              surah: firstAyah.sura_number,
+              surahName: firstAyah.sura_name_arabic,
+              ayah: firstAyah.ayah_number
+            },
+            end: {
+              surah: lastAyah.sura_number,
+              surahName: lastAyah.sura_name_arabic,
+              ayah: lastAyah.ayah_number
+            }
+          }
+        });
+      }
+    }
+
+    const result = {
+      juzNumber,
+      hizbNumber,
+      quarters
+    };
+
+    // Cache for 30 minutes
+    await this.redisService.set(cacheKey, JSON.stringify(result), 1800);
+
+    this.loggerService.logUserActivity('hizb_quarters_accessed', userId, { juzNumber, hizbNumber });
+
+    return result;
+  }
+
+  /**
+   * Get specific Rubʿ al-Hizb (quarter) content with ayahs
+   */
+  async getQuarter(
+    juzNumber: number, 
+    hizbNumber: number, 
+    quarterNumber: number, 
+    query: GetQuranQueryDto, 
+    userId: string
+  ): Promise<any> {
+    if (juzNumber < 1 || juzNumber > 30) {
+      throw new NotFoundException('Invalid Juz number');
+    }
+    if (hizbNumber < 1 || hizbNumber > 60) {
+      throw new NotFoundException('Invalid Hizb number');
+    }
+    if (quarterNumber < 1 || quarterNumber > 4) {
+      throw new NotFoundException('Invalid quarter number');
+    }
+
+    const cacheKey = `juz:${juzNumber}:hizb:${hizbNumber}:quarter:${quarterNumber}:${JSON.stringify(query)}`;
+    const cached = await this.redisService.get(cacheKey);
+
+    if (cached) {
+      this.loggerService.logUserActivity('quarter_accessed', userId, { 
+        juzNumber, hizbNumber, quarterNumber, cached: true 
+      });
+      return JSON.parse(cached);
+    }
+
+    const db = this.databaseService.getConnection().db;
+    const collection = db.collection('quran_ayahs');
+
+    // Get all ayahs for this Hizb
+    const allAyahs = await collection.find({ 
+      juz_number: juzNumber, 
+      hizb_number: hizbNumber 
+    })
+    .sort({ sura_number: 1, ayah_number: 1 })
+    .toArray();
+
+    if (allAyahs.length === 0) {
+      throw new NotFoundException('Hizb not found');
+    }
+
+    // Divide ayahs into 4 quarters and get the requested quarter
+    const totalAyahs = allAyahs.length;
+    const ayahsPerQuarter = Math.ceil(totalAyahs / 4);
+    const quarterIndex = quarterNumber - 1; // Convert to 0-based index
+    
+    const startIndex = quarterIndex * ayahsPerQuarter;
+    const endIndex = Math.min((quarterIndex + 1) * ayahsPerQuarter, totalAyahs);
+    const quarterAyahs = allAyahs.slice(startIndex, endIndex);
+
+    if (quarterAyahs.length === 0) {
+      throw new NotFoundException('Quarter not found');
+    }
+
+    // Format ayahs for display
+    const formattedAyahs = quarterAyahs.map(ayah => ({
+      id: ayah._id,
+      surah: ayah.sura_number,
+      surahName: ayah.sura_name_arabic,
+      ayah: ayah.ayah_number,
+      text: ayah.ayah_text_arabic,
+      translation: query.translation ? '' : undefined, // TODO: Add translation lookup
+      juz: ayah.juz_number,
+      hizb: ayah.hizb_number,
+      quarter: quarterNumber,
+      page: ayah.page_number,
+      sajda: ayah.sajda_type === 'obligatory' || ayah.sajda_type === 'recommended'
+    }));
+
+    // Get unique surahs in this quarter
+    const surahs = Array.from(new Set(quarterAyahs.map(ayah => ayah.sura_number)))
+      .map(surahNum => {
+        const ayah = quarterAyahs.find(a => a.sura_number === surahNum);
+        return {
+          surah: surahNum,
+          surahName: ayah?.sura_name_arabic || ''
+        };
+      })
+      .sort((a, b) => a.surah - b.surah);
+
+    const result = {
+      juzNumber,
+      hizbNumber,
+      quarterNumber,
+      rubAlHizb: `Rubʿ ${quarterNumber}`, // Arabic terminology
+      ayahCount: formattedAyahs.length,
+      surahs,
+      range: {
+        start: {
+          surah: quarterAyahs[0].sura_number,
+          surahName: quarterAyahs[0].sura_name_arabic,
+          ayah: quarterAyahs[0].ayah_number
+        },
+        end: {
+          surah: quarterAyahs[quarterAyahs.length - 1].sura_number,
+          surahName: quarterAyahs[quarterAyahs.length - 1].sura_name_arabic,
+          ayah: quarterAyahs[quarterAyahs.length - 1].ayah_number
+        }
+      },
+      ayahs: formattedAyahs
+    };
+
+    // Cache for 30 minutes
+    await this.redisService.set(cacheKey, JSON.stringify(result), 1800);
+
+    this.loggerService.logUserActivity('quarter_accessed', userId, { 
+      juzNumber, hizbNumber, quarterNumber 
+    });
+
+    return result;
   }
 }

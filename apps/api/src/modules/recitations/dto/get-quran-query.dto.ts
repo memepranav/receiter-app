@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, Transform } from 'class-validator';
 
 export class GetQuranQueryDto {
   @ApiProperty({
@@ -29,4 +29,15 @@ export class GetQuranQueryDto {
   @IsOptional()
   @IsString()
   textFormat?: 'uthmani' | 'indopak' | 'simple';
+
+  @ApiProperty({
+    description: 'Include Arabic text in the response (for performance optimization)',
+    example: true,
+    required: false,
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  includeText?: boolean;
 }

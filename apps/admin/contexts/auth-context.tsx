@@ -96,7 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const responseData = data.data || data
       const token = responseData.accessToken || responseData.token
       
-      console.log('💾 Storing token:', { hasToken: !!token, tokenLength: token?.length })
+      console.log('💾 Storing token:', { 
+        hasToken: !!token, 
+        tokenLength: token?.length,
+        tokenStart: token?.substring(0, 50),
+        fullResponse: responseData 
+      })
       localStorage.setItem('admin_token', token)
       setUser(responseData.user)
       router.push('/dashboard')

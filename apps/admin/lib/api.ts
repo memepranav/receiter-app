@@ -13,7 +13,8 @@ export class ApiClient {
     console.log('🔑 API Client Debug:', {
       hasToken: !!token,
       tokenLength: token?.length || 0,
-      tokenPreview: token?.substring(0, 20) + '...' || 'No token'
+      tokenStart: token?.substring(0, 50) || 'No token',
+      authHeader: token ? 'Bearer ' + token.substring(0, 20) + '...' : 'No header'
     })
     
     return {

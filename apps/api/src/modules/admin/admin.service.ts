@@ -10,6 +10,7 @@ import { AnalyticsEvent, AnalyticsEventDocument } from '../analytics/schemas/ana
 
 import { LoggerService } from '../../core/logger/logger.service';
 import { RedisService } from '../../core/redis/redis.service';
+import { RecitationsService } from '../recitations/recitations.service';
 
 // DTOs
 import { AdminUserUpdateDto } from './dto/admin-user-update.dto';
@@ -26,6 +27,7 @@ export class AdminService {
     @InjectModel(AnalyticsEvent.name) private analyticsEventModel: Model<AnalyticsEventDocument>,
     private loggerService: LoggerService,
     private redisService: RedisService,
+    private recitationsService: RecitationsService,
   ) {}
 
   /**
@@ -514,28 +516,35 @@ export class AdminService {
    * Get Quran content for admin
    */
   async getQuranContent(query: any): Promise<any> {
-    // This would typically use your Quran service or connect to Quran database
-    // For now, returning a basic structure - you should integrate with your actual Quran data source
     const { juz, hizb, quarter } = query;
 
     // If no parameters, return structure overview
     if (!juz && !hizb && !quarter) {
-      return {
-        structure: {
-          totalAyahs: 6236,
-          totalJuz: 30,
-          totalHizb: 60,
-          totalQuarters: 240
-        }
-      };
+      return this.recitationsService.getQuranStructure();
     }
 
-    // TODO: Implement actual Quran content retrieval based on your database structure
-    // This should integrate with your existing Quran data service
-    return {
-      message: 'Quran content retrieval - integrate with your Quran service',
-      query
-    };
+    // If only juz is specified, return hizb list for that juz
+    if (juz && !hizb) {
+      return this.recitationsService.getHizbsForJuz(parseInt(juz), 'admin-user');
+    }
+
+    // If juz and hizb are specified but no quarter, return quarters for that hizb
+    if (juz && hizb && !quarter) {
+      return this.recitationsService.getQuartersForHizb(parseInt(juz), parseInt(hizb), 'admin-user');
+    }
+
+    // If all parameters are specified, return ayahs for that quarter
+    if (juz && hizb && quarter) {
+      return this.recitationsService.getQuarter(
+        parseInt(juz), 
+        parseInt(hizb), 
+        parseInt(quarter), 
+        { includeText: true }, 
+        'admin-user'
+      );
+    }
+
+    return { error: 'Invalid parameters' };
   }
 
   /**

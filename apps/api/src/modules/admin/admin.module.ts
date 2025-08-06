@@ -20,11 +20,16 @@ import { Transaction, TransactionSchema } from '../rewards/schemas/transaction.s
 import { Badge, BadgeSchema } from '../rewards/schemas/badge.schema';
 import { AnalyticsEvent, AnalyticsEventSchema } from '../analytics/schemas/analytics-event.schema';
 import { UserSession, UserSessionSchema } from '../analytics/schemas/user-session.schema';
+import { Surah, SurahSchema } from '../recitations/schemas/surah.schema';
+import { Juz, JuzSchema } from '../recitations/schemas/juz.schema';
+import { Reciter, ReciterSchema } from '../recitations/schemas/reciter.schema';
+import { Translation, TranslationSchema } from '../recitations/schemas/translation.schema';
 
 // Core modules
 import { LoggerModule } from '../../core/logger/logger.module';
 import { RedisModule } from '../../core/redis/redis.module';
 import { EmailModule } from '../../core/email/email.module';
+import { DatabaseModule } from '../../core/database/database.module';
 
 // Other service modules for admin operations
 import { UsersService } from '../users/users.service';
@@ -32,6 +37,7 @@ import { RewardsService } from '../rewards/rewards.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { BlockchainService } from '../rewards/blockchain.service';
 import { AuthService } from '../auth/auth.service';
+import { RecitationsService } from '../recitations/recitations.service';
 
 @Module({
   imports: [
@@ -55,13 +61,18 @@ import { AuthService } from '../auth/auth.service';
       { name: Badge.name, schema: BadgeSchema },
       { name: AnalyticsEvent.name, schema: AnalyticsEventSchema },
       { name: UserSession.name, schema: UserSessionSchema },
+      { name: Surah.name, schema: SurahSchema },
+      { name: Juz.name, schema: JuzSchema },
+      { name: Reciter.name, schema: ReciterSchema },
+      { name: Translation.name, schema: TranslationSchema },
     ]),
     LoggerModule,
     RedisModule,
     EmailModule,
+    DatabaseModule,
   ],
   controllers: [AdminController, AdminAuthController, AdminTestController],
-  providers: [AdminService, AdminAuthService, AuthService, UsersService, RewardsService, AnalyticsService, BlockchainService],
+  providers: [AdminService, AdminAuthService, AuthService, UsersService, RewardsService, AnalyticsService, BlockchainService, RecitationsService],
   exports: [AdminService, AdminAuthService],
 })
 export class AdminModule {}

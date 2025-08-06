@@ -43,11 +43,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log('🔄 Verifying token with backend...')
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
       const response = await fetch('/api/admin/auth/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        signal: controller.signal
       })
+
+      clearTimeout(timeoutId)
 
       console.log('📡 Auth response:', { status: response.status, ok: response.ok })
 
@@ -58,12 +64,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const user = userData.data || userData
         setUser(user)
       } else {
-        console.log('❌ Auth failed, removing token')
+        console.log('❌ Auth failed, removing token. Status:', response.status)
+        // Only remove token on 401/403, not on network errors
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('admin_token')
+        }
+      }
+    } catch (error: any) {
+      console.error('Auth check failed:', error)
+      
+      if (error.name === 'AbortError') {
+        console.log('⏱️ Auth check timed out - keeping token for retry')
+      } else if (error.message?.includes('fetch')) {
+        console.log('🔄 Network error during auth check - keeping token for retry')
+      } else {
+        console.log('❌ Auth check failed - removing token')
         localStorage.removeItem('admin_token')
       }
-    } catch (error) {
-      console.error('Auth check failed:', error)
-      localStorage.removeItem('admin_token')
     } finally {
       setIsLoading(false)
     }

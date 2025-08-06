@@ -54,7 +54,9 @@ export function useUsers({ search = '', status = 'all', limit = 50, skip = 0 }: 
       if (search) params.append('search', search)
       if (status !== 'all') params.append('status', status)
       params.append('limit', limit.toString())
-      params.append('skip', skip.toString())
+      // Convert skip to page number (skip = (page - 1) * limit, so page = skip / limit + 1)
+      const page = Math.floor(skip / limit) + 1
+      params.append('page', page.toString())
 
       const result = await apiClient.get('/api/admin/users', params)
       const data = unwrapApiResponse(result)

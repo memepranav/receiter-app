@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsBoolean } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsOptional, IsString, IsBoolean, IsNumber } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class GetQuranQueryDto {
   @ApiProperty({
@@ -41,4 +41,24 @@ export class GetQuranQueryDto {
   @IsBoolean()
   @Transform(({ value }) => value === 'true' || value === true)
   includeText?: boolean;
+
+  @ApiProperty({
+    description: 'Starting ayah number for range queries',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  startAyah?: number;
+
+  @ApiProperty({
+    description: 'Ending ayah number for range queries',
+    example: 10,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  endAyah?: number;
 }

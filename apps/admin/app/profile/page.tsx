@@ -58,7 +58,8 @@ export default function ProfilePage() {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('admin_token')
-      const response = await fetch('/api/admin/auth/me', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+      const response = await fetch(`${apiUrl}/api/admin/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -85,7 +86,8 @@ export default function ProfilePage() {
     setSaving(true)
     try {
       const token = localStorage.getItem('admin_token')
-      const response = await fetch('/api/admin/auth/me', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+      const response = await fetch(`${apiUrl}/api/admin/auth/me`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -118,7 +120,8 @@ export default function ProfilePage() {
     setPasswordLoading(true)
     try {
       const token = localStorage.getItem('admin_token')
-      const response = await fetch('/api/admin/auth/change-password', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+      const response = await fetch(`${apiUrl}/api/admin/auth/change-password`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

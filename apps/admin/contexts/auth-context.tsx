@@ -46,7 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
-      const response = await fetch('/api/admin/auth/me', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'http://localhost:4000'
+      const response = await fetch(`${apiUrl}/api/admin/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -90,7 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       console.log('🔐 Attempting login for:', email)
-      const response = await fetch('/api/admin/auth/login', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'http://localhost:4000'
+      const response = await fetch(`${apiUrl}/api/admin/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

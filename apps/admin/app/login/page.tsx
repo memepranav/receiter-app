@@ -29,33 +29,33 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4 relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Yellow geometric lines */}
+        {/* Brand color geometric lines */}
         <div className="absolute top-0 left-0 w-full h-full">
           <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="yellowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.6"/>
-                <stop offset="100%" stopColor="#FBBF24" stopOpacity="0.3"/>
+              <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#5955DD" stopOpacity="0.6"/>
+                <stop offset="100%" stopColor="#F149FE" stopOpacity="0.3"/>
               </linearGradient>
             </defs>
             {/* Geometric lines pattern */}
-            <path d="M0,100 L300,0 L600,150 L900,50 L1200,200" stroke="url(#yellowGradient)" strokeWidth="2" fill="none"/>
-            <path d="M0,300 L400,200 L800,350 L1200,250" stroke="url(#yellowGradient)" strokeWidth="1.5" fill="none"/>
-            <path d="M200,0 L500,250 L800,100 L1200,300" stroke="url(#yellowGradient)" strokeWidth="1" fill="none"/>
-            <path d="M0,500 L300,400 L600,550 L900,450 L1200,600" stroke="url(#yellowGradient)" strokeWidth="2" fill="none"/>
-            <path d="M100,700 L400,600 L700,750 L1000,650 L1200,800" stroke="url(#yellowGradient)" strokeWidth="1.5" fill="none"/>
+            <path d="M0,100 L300,0 L600,150 L900,50 L1200,200" stroke="url(#brandGradient)" strokeWidth="2" fill="none"/>
+            <path d="M0,300 L400,200 L800,350 L1200,250" stroke="url(#brandGradient)" strokeWidth="1.5" fill="none"/>
+            <path d="M200,0 L500,250 L800,100 L1200,300" stroke="url(#brandGradient)" strokeWidth="1" fill="none"/>
+            <path d="M0,500 L300,400 L600,550 L900,450 L1200,600" stroke="url(#brandGradient)" strokeWidth="2" fill="none"/>
+            <path d="M100,700 L400,600 L700,750 L1000,650 L1200,800" stroke="url(#brandGradient)" strokeWidth="1.5" fill="none"/>
           </svg>
         </div>
         
         {/* Subtle ping accents */}
         <div className="absolute top-1/4 left-1/4 w-64 h-64 gradient-primary-soft rounded-full blur-3xl opacity-15 animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 gradient-secondary-soft rounded-full blur-3xl opacity-15 animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-yellow-400/10 rounded-full blur-2xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-primary/10 rounded-full blur-2xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
         
         {/* Islamic geometric patterns */}
         <div className="absolute top-20 right-20 opacity-5">
           <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <g fill="#F59E0B">
+            <g fill="#5955DD">
               <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="1"/>
               <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="1"/>
               <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="1"/>
@@ -66,7 +66,7 @@ export default function LoginPage() {
         
         <div className="absolute bottom-20 left-20 opacity-5">
           <svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-            <g fill="none" stroke="#F59E0B" strokeWidth="1">
+            <g fill="none" stroke="#F149FE" strokeWidth="1">
               <rect x="20" y="20" width="40" height="40" transform="rotate(45 40 40)"/>
               <rect x="30" y="30" width="20" height="20" transform="rotate(45 40 40)"/>
             </g>

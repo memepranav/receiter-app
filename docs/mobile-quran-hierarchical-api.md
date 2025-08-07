@@ -6,11 +6,12 @@ This API provides hierarchical access to the Holy Quran following the traditiona
 
 **30 Juz → 60 Hizb → 240 Rubʿ al-Hizb → 6,236 Ayahs**
 
+All data is sourced from a unified `quran_ayahs` collection containing all 6,236 ayahs with complete hierarchical metadata.
+
 ## Base URL
 
-```
-https://your-domain.com/api/v1/quran
-```
+**Production:** `https://161.35.11.154/api/v1/quran`  
+**Local Development:** `http://localhost:4000/api/v1/quran`
 
 ## Authentication
 
@@ -24,7 +25,7 @@ Authorization: Bearer <your-jwt-token>
 
 ### GET `/structure`
 
-Get the complete Quran structure overview.
+Get the complete Quran structure overview with real-time statistics from the database.
 
 **Response:**
 ```json
@@ -40,20 +41,121 @@ Get the complete Quran structure overview.
 }
 ```
 
+**Caching:** Cached for 1 day since structure is static.
+
 ---
 
 ## Level 1: Juz (Para) Navigation
 
 ### GET `/juz`
 
-Get list of all 30 Juz (existing endpoint).
+Get list of all 30 Juz with summary information and included Surahs.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "number": 1,
+      "name": "الجزء 1",
+      "englishName": "Juz 1",
+      "totalAyahs": 148,
+      "surahs": [
+        {
+          "sura_number": 1,
+          "sura_name_arabic": "الفاتحة"
+        },
+        {
+          "sura_number": 2,
+          "sura_name_arabic": "البقرة"
+        }
+      ]
+    }
+    // ... all 30 juz
+  ]
+}
+```
+
+**Caching:** Cached for 1 hour.
 
 ### GET `/juz/{juzNumber}`
 
-Get specific Juz content (existing endpoint).
+Get specific Juz content with all ayahs organized by Surahs.
 
 **Parameters:**
-- `juzNumber`: Integer (1-30)
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `juzNumber` | integer | ✅ | Juz number (1-30) |
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `translation` | string | ❌ | Translation identifier |
+| `reciter` | string | ❌ | Reciter identifier for audio |
+| `textFormat` | string | ❌ | Arabic text format |
+| `includeText` | boolean | ❌ | Include ayah text (default: true) |
+
+**Example Request:**
+```
+GET /api/v1/quran/juz/1?translation=sahih-international
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "number": 1,
+    "name": "الجزء 1",
+    "englishName": "Juz 1",
+    "totalAyahs": 148,
+    "surahs": [
+      {
+        "sura_number": 1,
+        "sura_name_arabic": "الفاتحة",
+        "ayahs": [
+          {
+            "number": 1,
+            "text": "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+            "juz": 1,
+            "hizb": 1,
+            "quarter": "1",
+            "isBismillah": false
+          }
+          // ... all ayahs from Al-Fatiha in this juz
+        ]
+      },
+      {
+        "sura_number": 2,
+        "sura_name_arabic": "البقرة", 
+        "ayahs": [
+          // ... ayahs from Al-Baqarah in this juz
+        ]
+      }
+    ],
+    "ayahs": [
+      // Flat array of all 148 ayahs in chronological order
+      {
+        "number": 1,
+        "text": "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+        "sura_number": 1,
+        "sura_name_arabic": "الفاتحة",
+        "juz": 1,
+        "hizb": 1,
+        "quarter": "1",
+        "isBismillah": false
+      }
+      // ... all ayahs
+    ],
+    "translation": [
+      // Translation data if requested
+    ]
+  }
+}
+```
+
+**Caching:** Cached for 30 minutes.
 
 ---
 
@@ -61,10 +163,17 @@ Get specific Juz content (existing endpoint).
 
 ### GET `/juz/{juzNumber}/hizbs`
 
-Get list of Hizb for a specific Juz.
+Get list of all Hizb (halves) for a specific Juz with summary information.
 
 **Parameters:**
-- `juzNumber`: Integer (1-30)
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `juzNumber` | integer | ✅ | Juz number (1-30) |
+
+**Example Request:**
+```
+GET /api/v1/quran/juz/1/hizbs
+```
 
 **Response:**
 ```json
@@ -75,7 +184,7 @@ Get list of Hizb for a specific Juz.
     "hizbs": [
       {
         "hizbNumber": 1,
-        "ayahCount": 148,
+        "ayahCount": 74,
         "quarterCount": 4,
         "surahs": [
           {
@@ -90,7 +199,7 @@ Get list of Hizb for a specific Juz.
       },
       {
         "hizbNumber": 2,
-        "ayahCount": 111,
+        "ayahCount": 74,
         "quarterCount": 4,
         "surahs": [
           {
@@ -104,14 +213,28 @@ Get list of Hizb for a specific Juz.
 }
 ```
 
+**Caching:** Cached for 30 minutes.
+
 ### GET `/juz/{juzNumber}/hizb/{hizbNumber}`
 
-Get specific Hizb content.
+Get specific Hizb content with all ayahs and surah organization.
 
 **Parameters:**
-- `juzNumber`: Integer (1-30)
-- `hizbNumber`: Integer (1-60)
-- `includeText`: Boolean (optional) - Include full ayah text
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `juzNumber` | integer | ✅ | Juz number (1-30) |
+| `hizbNumber` | integer | ✅ | Hizb number (1-60) |
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `includeText` | boolean | ❌ | Include full ayah text (default: true) |
+| `translation` | string | ❌ | Translation identifier |
+
+**Example Request:**
+```
+GET /api/v1/quran/juz/1/hizb/1?includeText=true&translation=sahih-international
+```
 
 **Response:**
 ```json
@@ -120,7 +243,7 @@ Get specific Hizb content.
   "data": {
     "juzNumber": 1,
     "hizbNumber": 1,
-    "ayahCount": 148,
+    "ayahCount": 74,
     "quarterCount": 4,
     "surahs": [
       {
@@ -133,7 +256,6 @@ Get specific Hizb content.
       }
     ],
     "ayahs": [
-      // Only included if includeText=true
       {
         "id": "1:1",
         "surah": 1,
@@ -144,10 +266,13 @@ Get specific Hizb content.
         "hizb": 1,
         "quarter": 1
       }
+      // ... all ayahs in this hizb
     ]
   }
 }
 ```
+
+**Caching:** Cached for 30 minutes.
 
 ---
 
@@ -272,15 +397,27 @@ Get list of 4 quarters (Rubʿ al-Hizb) for a specific Hizb.
 
 ### GET `/juz/{juzNumber}/hizb/{hizbNumber}/quarter/{quarterNumber}`
 
-Get specific Rubʿ al-Hizb (quarter) content with all ayahs.
+Get specific Rubʿ al-Hizb (quarter) content with all ayahs and detailed metadata.
 
 **Parameters:**
-- `juzNumber`: Integer (1-30)
-- `hizbNumber`: Integer (1-60)  
-- `quarterNumber`: Integer (1-4)
-- `translation`: String (optional) - Translation identifier
-- `reciter`: String (optional) - Reciter identifier for audio
-- `textFormat`: String (optional) - 'uthmani', 'indopak', 'simple'
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `juzNumber` | integer | ✅ | Juz number (1-30) |
+| `hizbNumber` | integer | ✅ | Hizb number (1-60) |
+| `quarterNumber` | integer | ✅ | Quarter number (1-4) |
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `translation` | string | ❌ | Translation identifier |
+| `reciter` | string | ❌ | Reciter identifier for audio |
+| `textFormat` | string | ❌ | Arabic text format: 'uthmani', 'indopak', 'simple' |
+| `includeText` | boolean | ❌ | Include ayah text (default: true) |
+
+**Example Request:**
+```
+GET /api/v1/quran/juz/1/hizb/1/quarter/1?translation=sahih-international&reciter=abdul_basit
+```
 
 **Response:**
 ```json
@@ -468,3 +605,36 @@ const fullQuarter = await fetch('/api/v1/quran/juz/1/hizb/1/quarter/1?includeTex
 - **Ayah (آية)**: Individual verse of the Quran
 
 This structure allows users to navigate the Quran exactly as it's traditionally organized in Islamic texts and apps worldwide.
+
+---
+
+## Database Implementation Notes
+
+All hierarchical endpoints now query the unified `quran_ayahs` collection which contains:
+- **6,236 individual ayah documents** with complete metadata
+- **Efficient indexing** on `juz_number`, `hizb_number`, `sura_number` for fast queries
+- **Real-time aggregation** for calculating counts and organizing structure
+- **Consistent data** ensuring no mismatches between different levels
+
+## Performance Optimizations
+
+1. **Intelligent Caching**
+   - Structure data cached for 1 day (static)
+   - Content queries cached for 30 minutes
+   - Redis-based caching for optimal response times
+
+2. **Query Efficiency**
+   - MongoDB aggregation pipelines for grouping operations
+   - Selective field projection to minimize data transfer
+   - Indexed queries for sub-millisecond lookups
+
+3. **Response Optimization**
+   - Optional `includeText` parameter for navigation-only requests
+   - Layered data structure (overview → details)
+   - Compressed JSON responses
+
+---
+
+**Last Updated:** August 2025  
+**API Version:** 1.2  
+**Database Schema:** Unified `quran_ayahs` collection

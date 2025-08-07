@@ -20,8 +20,7 @@ import { Transaction, TransactionSchema } from '../rewards/schemas/transaction.s
 import { Badge, BadgeSchema } from '../rewards/schemas/badge.schema';
 import { AnalyticsEvent, AnalyticsEventSchema } from '../analytics/schemas/analytics-event.schema';
 import { UserSession, UserSessionSchema } from '../analytics/schemas/user-session.schema';
-import { Surah, SurahSchema } from '../recitations/schemas/surah.schema';
-import { Juz, JuzSchema } from '../recitations/schemas/juz.schema';
+import { QuranAyah, QuranAyahSchema } from '../recitations/schemas/quran-ayah.schema';
 import { Reciter, ReciterSchema } from '../recitations/schemas/reciter.schema';
 import { Translation, TranslationSchema } from '../recitations/schemas/translation.schema';
 
@@ -61,8 +60,7 @@ import { RecitationsService } from '../recitations/recitations.service';
       { name: Badge.name, schema: BadgeSchema },
       { name: AnalyticsEvent.name, schema: AnalyticsEventSchema },
       { name: UserSession.name, schema: UserSessionSchema },
-      { name: Surah.name, schema: SurahSchema },
-      { name: Juz.name, schema: JuzSchema },
+      { name: QuranAyah.name, schema: QuranAyahSchema },
       { name: Reciter.name, schema: ReciterSchema },
       { name: Translation.name, schema: TranslationSchema },
     ]),

@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { Surah, SurahDocument } from './schemas/surah.schema';
-import { Juz, JuzDocument } from './schemas/juz.schema';
+import { QuranAyah, QuranAyahDocument } from './schemas/quran-ayah.schema';
 import { Reciter, ReciterDocument } from './schemas/reciter.schema';
 import { Translation, TranslationDocument } from './schemas/translation.schema';
 
@@ -16,8 +15,7 @@ import { GetQuranQueryDto } from './dto/get-quran-query.dto';
 @Injectable()
 export class RecitationsService {
   constructor(
-    @InjectModel(Surah.name) private surahModel: Model<SurahDocument>,
-    @InjectModel(Juz.name) private juzModel: Model<JuzDocument>,
+    @InjectModel(QuranAyah.name) private quranAyahModel: Model<QuranAyahDocument>,
     @InjectModel(Reciter.name) private reciterModel: Model<ReciterDocument>,
     @InjectModel(Translation.name) private translationModel: Model<TranslationDocument>,
     private loggerService: LoggerService,
@@ -36,11 +34,29 @@ export class RecitationsService {
       return JSON.parse(cached);
     }
 
-    const surahs = await this.surahModel
-      .find()
-      .select('number name englishName englishNameTranslation numberOfAyahs revelationType')
-      .sort({ number: 1 })
-      .exec();
+    // Aggregate to get unique surahs with their info from quran_ayahs
+    const surahs = await this.quranAyahModel.aggregate([
+      {
+        $group: {
+          _id: '$sura_number',
+          sura_number: { $first: '$sura_number' },
+          sura_name_arabic: { $first: '$sura_name_arabic' },
+          numberOfAyahs: { $sum: 1 },
+          firstAyah: { $first: '$ayah_text_arabic' }
+        }
+      },
+      {
+        $sort: { sura_number: 1 }
+      },
+      {
+        $project: {
+          _id: 0,
+          number: '$sura_number',
+          name: '$sura_name_arabic',
+          numberOfAyahs: 1
+        }
+      }
+    ]).exec();
 
     // Cache for 1 hour
     await this.redisService.set(cacheKey, JSON.stringify(surahs), 3600);
@@ -64,13 +80,42 @@ export class RecitationsService {
       return JSON.parse(cached);
     }
 
-    const surah = await this.surahModel.findOne({ number: surahNumber }).exec();
+    // Query ayahs for the specific surah
+    let matchQuery: any = { sura_number: surahNumber };
+    
+    // Apply ayah range filter if specified
+    if (query.startAyah && query.endAyah) {
+      matchQuery.ayah_number = { $gte: query.startAyah, $lte: query.endAyah };
+    } else if (query.startAyah) {
+      matchQuery.ayah_number = { $gte: query.startAyah };
+    } else if (query.endAyah) {
+      matchQuery.ayah_number = { $lte: query.endAyah };
+    }
 
-    if (!surah) {
+    const ayahs = await this.quranAyahModel
+      .find(matchQuery)
+      .sort({ ayah_number: 1 })
+      .exec();
+
+    if (ayahs.length === 0) {
       throw new NotFoundException('Surah not found');
     }
 
-    let result: any = surah.toObject();
+    // Get surah metadata from first ayah
+    const firstAyah = ayahs[0];
+    let result: any = {
+      number: firstAyah.sura_number,
+      name: firstAyah.sura_name_arabic,
+      numberOfAyahs: ayahs.length,
+      ayahs: ayahs.map(ayah => ({
+        number: ayah.ayah_number,
+        text: ayah.ayah_text_arabic,
+        juz: ayah.juz_number,
+        hizb: ayah.hizb_number,
+        quarter: ayah.quarter_hizb_segment,
+        isBismillah: ayah.is_bismillah
+      }))
+    };
 
     // Add translation if requested
     if (query.translation) {
@@ -107,11 +152,35 @@ export class RecitationsService {
       return JSON.parse(cached);
     }
 
-    const juzList = await this.juzModel
-      .find()
-      .select('number name englishName totalAyahs startPage endPage')
-      .sort({ number: 1 })
-      .exec();
+    // Aggregate to get Juz list from quran_ayahs
+    const juzList = await this.quranAyahModel.aggregate([
+      {
+        $group: {
+          _id: '$juz_number',
+          juz_number: { $first: '$juz_number' },
+          totalAyahs: { $sum: 1 },
+          surahs: { 
+            $addToSet: {
+              sura_number: '$sura_number',
+              sura_name_arabic: '$sura_name_arabic'
+            }
+          }
+        }
+      },
+      {
+        $sort: { juz_number: 1 }
+      },
+      {
+        $project: {
+          _id: 0,
+          number: '$juz_number',
+          name: { $concat: ['الجزء ', { $toString: '$juz_number' }] },
+          englishName: { $concat: ['Juz ', { $toString: '$juz_number' }] },
+          totalAyahs: 1,
+          surahs: 1
+        }
+      }
+    ]).exec();
 
     // Cache for 1 hour
     await this.redisService.set(cacheKey, JSON.stringify(juzList), 3600);
@@ -135,29 +204,53 @@ export class RecitationsService {
       return JSON.parse(cached);
     }
 
-    const juz = await this.juzModel.findOne({ number: juzNumber }).exec();
+    // Get all ayahs for the specific Juz
+    const ayahs = await this.quranAyahModel
+      .find({ juz_number: juzNumber })
+      .sort({ sura_number: 1, ayah_number: 1 })
+      .exec();
 
-    if (!juz) {
+    if (ayahs.length === 0) {
       throw new NotFoundException('Juz not found');
     }
 
-    // Get ayahs for all surahs in this Juz
-    const ayahs = [];
-    for (const juzSurah of juz.surahs) {
-      const surah = await this.surahModel.findOne({ number: juzSurah.surahNumber }).exec();
-      if (surah) {
-        const surahAyahs = surah.ayahs.slice(juzSurah.startAyah - 1, juzSurah.endAyah);
-        ayahs.push(...surahAyahs.map(ayah => ({
-          ...ayah,
-          surahNumber: juzSurah.surahNumber,
-          surahName: juzSurah.surahName,
-        })));
+    // Group ayahs by surah for better organization
+    const surahsInJuz = ayahs.reduce((acc, ayah) => {
+      const surahKey = ayah.sura_number;
+      if (!acc[surahKey]) {
+        acc[surahKey] = {
+          sura_number: ayah.sura_number,
+          sura_name_arabic: ayah.sura_name_arabic,
+          ayahs: []
+        };
       }
-    }
+      acc[surahKey].ayahs.push({
+        number: ayah.ayah_number,
+        text: ayah.ayah_text_arabic,
+        juz: ayah.juz_number,
+        hizb: ayah.hizb_number,
+        quarter: ayah.quarter_hizb_segment,
+        isBismillah: ayah.is_bismillah
+      });
+      return acc;
+    }, {});
 
     let result: any = {
-      ...juz.toObject(),
-      ayahs,
+      number: juzNumber,
+      name: `الجزء ${juzNumber}`,
+      englishName: `Juz ${juzNumber}`,
+      totalAyahs: ayahs.length,
+      surahs: Object.values(surahsInJuz),
+      ayahs: ayahs.map(ayah => ({
+        number: ayah.ayah_number,
+        text: ayah.ayah_text_arabic,
+        sura_number: ayah.sura_number,
+        sura_name_arabic: ayah.sura_name_arabic,
+        juz: ayah.juz_number,
+        hizb: ayah.hizb_number,
+        quarter: ayah.quarter_hizb_segment,
+        isBismillah: ayah.is_bismillah
+      })),
     };
 
     // Add translation if requested
@@ -187,23 +280,24 @@ export class RecitationsService {
     query: GetQuranQueryDto, 
     userId: string
   ): Promise<any> {
-    const surah = await this.surahModel.findOne({ number: surahNumber }).exec();
-
-    if (!surah) {
-      throw new NotFoundException('Surah not found');
-    }
-
-    const ayah = surah.ayahs.find(a => a.number === ayahNumber);
+    const ayah = await this.quranAyahModel.findOne({
+      sura_number: surahNumber,
+      ayah_number: ayahNumber
+    }).exec();
 
     if (!ayah) {
       throw new NotFoundException('Ayah not found');
     }
 
     let result: any = {
-      ...ayah,
-      surahNumber,
-      surahName: surah.name,
-      surahEnglishName: surah.englishName,
+      number: ayah.ayah_number,
+      text: ayah.ayah_text_arabic,
+      sura_number: ayah.sura_number,
+      sura_name_arabic: ayah.sura_name_arabic,
+      juz: ayah.juz_number,
+      hizb: ayah.hizb_number,
+      quarter: ayah.quarter_hizb_segment,
+      isBismillah: ayah.is_bismillah,
     };
 
     // Add translation if requested
@@ -341,12 +435,12 @@ export class RecitationsService {
     // TODO: Implement full-text search across Quran content
     // This would typically use MongoDB text search or Elasticsearch
     
-    const searchResults = await this.surahModel
+    // Search in Quran ayahs collection
+    const searchResults = await this.quranAyahModel
       .find({
         $or: [
-          { name: { $regex: query, $options: 'i' } },
-          { englishName: { $regex: query, $options: 'i' } },
-          { englishNameTranslation: { $regex: query, $options: 'i' } },
+          { sura_name_arabic: { $regex: query, $options: 'i' } },
+          { ayah_text_arabic: { $regex: query, $options: 'i' } },
         ],
       })
       .limit(options.limit || 20)
@@ -365,34 +459,37 @@ export class RecitationsService {
    * Get random Ayah
    */
   async getRandomAyah(query: GetQuranQueryDto, userId: string): Promise<any> {
-    // Get a random surah
-    const randomSurahNumber = Math.floor(Math.random() * 114) + 1;
-    const surah = await this.surahModel.findOne({ number: randomSurahNumber }).exec();
+    // Get total ayah count
+    const totalAyahs = await this.quranAyahModel.countDocuments().exec();
+    const randomIndex = Math.floor(Math.random() * totalAyahs);
+    
+    // Get random ayah using skip
+    const ayah = await this.quranAyahModel.findOne().skip(randomIndex).exec();
 
-    if (!surah) {
-      throw new NotFoundException('Surah not found');
+    if (!ayah) {
+      throw new NotFoundException('Ayah not found');
     }
 
-    // Get a random ayah from the surah
-    const randomAyahIndex = Math.floor(Math.random() * surah.ayahs.length);
-    const ayah = surah.ayahs[randomAyahIndex];
-
     let result: any = {
-      ...ayah,
-      surahNumber: randomSurahNumber,
-      surahName: surah.name,
-      surahEnglishName: surah.englishName,
+      number: ayah.ayah_number,
+      text: ayah.ayah_text_arabic,
+      surahNumber: ayah.sura_number,
+      surahName: ayah.sura_name_arabic,
+      juz: ayah.juz_number,
+      hizb: ayah.hizb_number,
+      quarter: ayah.quarter_hizb_segment,
+      isBismillah: ayah.is_bismillah
     };
 
     // Add translation if requested
     if (query.translation) {
-      const translation = await this.getTranslationForAyah(randomSurahNumber, ayah.number, query.translation);
+      const translation = await this.getTranslationForAyah(ayah.sura_number, ayah.ayah_number, query.translation);
       result.translation = translation;
     }
 
     this.loggerService.logUserActivity('random_ayah_accessed', userId, { 
-      surahNumber: randomSurahNumber, 
-      ayahNumber: ayah.number 
+      surahNumber: ayah.sura_number, 
+      ayahNumber: ayah.ayah_number 
     });
 
     return result;
@@ -412,43 +509,39 @@ export class RecitationsService {
     }
 
     // Use date as seed for consistent daily ayah
-    const dateNumber = parseInt(today.replace(/-/g, '')) % 6236; // Total ayahs in Quran
+    const totalAyahs = await this.quranAyahModel.countDocuments().exec();
+    const dateNumber = parseInt(today.replace(/-/g, '')) % totalAyahs;
     
-    // Find the ayah at this position
-    let currentCount = 0;
-    let targetSurah: SurahDocument | null = null;
-    let targetAyah: any = null;
+    // Get ayah at this position
+    const targetAyah = await this.quranAyahModel.findOne().skip(dateNumber).exec();
 
-    const surahs = await this.surahModel.find().sort({ number: 1 }).exec();
-    
-    for (const surah of surahs) {
-      if (currentCount + surah.numberOfAyahs > dateNumber) {
-        targetSurah = surah;
-        targetAyah = surah.ayahs[dateNumber - currentCount];
-        break;
-      }
-      currentCount += surah.numberOfAyahs;
-    }
-
-    if (!targetSurah || !targetAyah) {
+    if (!targetAyah) {
       // Fallback to first ayah of Al-Fatiha
-      targetSurah = await this.surahModel.findOne({ number: 1 }).exec();
-      targetAyah = targetSurah?.ayahs[0];
+      const fallbackAyah = await this.quranAyahModel.findOne({ sura_number: 1, ayah_number: 1 }).exec();
+      if (!fallbackAyah) {
+        throw new NotFoundException('No ayahs found');
+      }
     }
+
+    const ayah = targetAyah || await this.quranAyahModel.findOne({ sura_number: 1, ayah_number: 1 }).exec();
 
     let result: any = {
-      ...targetAyah,
-      surahNumber: targetSurah!.number,
-      surahName: targetSurah!.name,
-      surahEnglishName: targetSurah!.englishName,
+      number: ayah!.ayah_number,
+      text: ayah!.ayah_text_arabic,
+      surahNumber: ayah!.sura_number,
+      surahName: ayah!.sura_name_arabic,
+      juz: ayah!.juz_number,
+      hizb: ayah!.hizb_number,
+      quarter: ayah!.quarter_hizb_segment,
+      isBismillah: ayah!.is_bismillah,
       date: today,
     };
 
     // Add translation if requested
     if (query.translation) {
       const translation = await this.getTranslationForAyah(
-        targetSurah!.number, 
-        targetAyah.number, 
+        ayah!.sura_number, 
+        ayah!.ayah_number, 
         query.translation
       );
       result.translation = translation;
@@ -463,8 +556,8 @@ export class RecitationsService {
 
     this.loggerService.logUserActivity('ayah_of_day_accessed', userId, { 
       date: today,
-      surahNumber: targetSurah!.number, 
-      ayahNumber: targetAyah.number 
+      surahNumber: ayah!.sura_number, 
+      ayahNumber: ayah!.ayah_number 
     });
 
     return result;
@@ -861,9 +954,7 @@ export class RecitationsService {
       translation: query.translation ? '' : undefined, // TODO: Add translation lookup
       juz: ayah.juz_number,
       hizb: ayah.hizb_number,
-      quarter: quarterNumber,
-      page: ayah.page_number,
-      sajda: ayah.sajda_type === 'obligatory' || ayah.sajda_type === 'recommended'
+      quarter: quarterNumber
     }));
 
     // Get unique surahs in this quarter

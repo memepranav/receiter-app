@@ -6,8 +6,7 @@ import { RecitationsController } from './recitations.controller';
 import { RecitationsService } from './recitations.service';
 
 // Schemas
-import { Surah, SurahSchema } from './schemas/surah.schema';
-import { Juz, JuzSchema } from './schemas/juz.schema';
+import { QuranAyah, QuranAyahSchema } from './schemas/quran-ayah.schema';
 import { Reciter, ReciterSchema } from './schemas/reciter.schema';
 import { Translation, TranslationSchema } from './schemas/translation.schema';
 
@@ -20,8 +19,7 @@ import { DatabaseModule } from '../../core/database/database.module';
   imports: [
     ConfigModule,
     MongooseModule.forFeature([
-      { name: Surah.name, schema: SurahSchema },
-      { name: Juz.name, schema: JuzSchema },
+      { name: QuranAyah.name, schema: QuranAyahSchema },
       { name: Reciter.name, schema: ReciterSchema },
       { name: Translation.name, schema: TranslationSchema },
     ]),

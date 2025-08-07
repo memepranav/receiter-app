@@ -3,9 +3,8 @@
 This document provides comprehensive information about the mobile authentication APIs for the Quran Reading App.
 
 ## Base URL
-```
-https://your-domain.com/api/v1
-```
+**Production:** `https://161.35.11.154/api/v1`  
+**Local Development:** `http://localhost:4000/api/v1`
 
 ## Authentication
 All authenticated endpoints require a JWT token in the Authorization header:

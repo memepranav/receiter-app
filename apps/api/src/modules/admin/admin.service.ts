@@ -517,12 +517,36 @@ export class AdminService {
    * Get app settings
    */
   async getSettings(): Promise<any> {
-    // TODO: Implement settings management
+    // Return current system configuration from environment variables
     return {
-      maintenance: false,
-      registrationEnabled: true,
-      rewardsEnabled: true,
-      minWithdrawalAmount: 100,
+      jwt: {
+        expiresIn: process.env.JWT_EXPIRES_IN || '1h',
+        refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+      },
+      cors: {
+        origins: process.env.CORS_ORIGINS || '',
+      },
+      rateLimit: {
+        window: parseInt(process.env.RATE_LIMIT_WINDOW) || 900000,
+        max: parseInt(process.env.RATE_LIMIT_MAX) || 100,
+      },
+      upload: {
+        maxFileSize: parseInt(process.env.MAX_FILE_SIZE) || 10485760,
+        uploadDir: process.env.UPLOAD_DIR || './uploads',
+      },
+      email: {
+        smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
+        smtpPort: parseInt(process.env.SMTP_PORT) || 587,
+        smtpUser: process.env.SMTP_USER || '',
+      },
+      solana: {
+        network: process.env.SOLANA_NETWORK || 'devnet',
+        rpcUrl: process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com',
+      },
+      app: {
+        name: process.env.APP_NAME || 'Quran Reciter API',
+        version: process.env.APP_VERSION || '1.0.0',
+      },
     };
   }
 
@@ -530,10 +554,41 @@ export class AdminService {
    * Update app settings
    */
   async updateSettings(settings: Record<string, any>, adminId: string): Promise<any> {
-    // TODO: Implement settings update logic
-    this.loggerService.logUserActivity('admin_settings_updated', adminId, settings);
+    try {
+      this.loggerService.logUserActivity('admin_settings_updated', adminId, settings);
 
-    return { message: 'Settings updated successfully', settings };
+      // Note: In a production environment, you would typically:
+      // 1. Store these in a database settings collection
+      // 2. Update environment variables through a secure configuration management system
+      // 3. Apply changes through a deployment process
+      
+      // For now, we'll return the updated settings but note that environment variables
+      // would need to be updated manually and the application restarted
+      const updatedSettings = {
+        ...settings,
+        lastUpdated: new Date().toISOString(),
+        updatedBy: adminId,
+      };
+
+      // Log configuration change
+      this.loggerService.log(
+        `Admin ${adminId} updated system configuration: ${JSON.stringify(settings)}`,
+        'AdminService'
+      );
+
+      return { 
+        message: 'Configuration updated successfully. Note: Some settings may require application restart to take effect.',
+        settings: updatedSettings,
+        warning: 'Environment variables need to be updated manually on the server for changes to persist.'
+      };
+    } catch (error) {
+      this.loggerService.error(
+        `Failed to update settings: ${error.message}`,
+        error.stack,
+        'AdminService'
+      );
+      throw error;
+    }
   }
 
   /**

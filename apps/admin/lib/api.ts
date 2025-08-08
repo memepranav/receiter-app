@@ -80,8 +80,18 @@ export class ApiClient {
   }
 }
 
+// Get API base URL from environment variables (same pattern as auth-context)
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use NEXT_PUBLIC_API_URL from .env.local or fallback
+    return process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || ''
+  }
+  // Server-side: use API_BASE_URL or empty string (for relative URLs on server)
+  return process.env.API_BASE_URL || ''
+}
+
 // Create a default instance
-export const apiClient = new ApiClient()
+export const apiClient = new ApiClient(getApiBaseUrl())
 
 // Helper function for handling API responses (NestJS returns wrapped responses)
 export function unwrapApiResponse(response: any): any {

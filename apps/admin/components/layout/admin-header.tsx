@@ -16,7 +16,7 @@ export function AdminHeader() {
   const dropdownRef = useClickOutside<HTMLDivElement>(() => setShowUserMenu(false), showUserMenu)
 
   return (
-    <header className="bg-slate-800 text-white">
+    <header className="bg-primary text-white" style={{backgroundColor: '#5955DD'}}>
       <div className="flex items-center justify-between px-6 py-4">
         {/* Logo */}
         <div className="flex items-center space-x-3">
@@ -92,7 +92,8 @@ export function AdminHeader() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center space-x-2 bg-slate-700 rounded-full px-3 py-2 hover:bg-slate-600 transition-colors"
+              className="flex items-center space-x-2 rounded-full px-3 py-2 hover:bg-black/20 transition-colors"
+              style={{backgroundColor: 'rgba(0,0,0,0.1)'}}
             >
               <div className="h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center">
                 <User className="h-4 w-4 text-gray-700" />
@@ -103,9 +104,9 @@ export function AdminHeader() {
 
             {/* User Dropdown Menu */}
             {showUserMenu && (
-              <div className="absolute right-0 mt-3 w-64 bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-600/50 z-50 overflow-hidden">
+              <div className="absolute right-0 mt-3 w-64 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 z-50 overflow-hidden" style={{backgroundColor: 'rgba(89, 85, 221, 0.95)'}}>
                 {/* Header Section with User Name */}
-                <div className="px-6 py-4 border-b border-slate-600/50">
+                <div className="px-6 py-4 border-b border-white/20">
                   <div className="text-white text-lg font-medium">{user?.name || 'Admin User'}</div>
                 </div>
 
@@ -113,7 +114,7 @@ export function AdminHeader() {
                 <div className="py-3">
                   <Link
                     href="/profile"
-                    className="flex items-center space-x-3 w-full px-6 py-3 text-white/90 hover:text-white hover:bg-slate-700/50 transition-colors"
+                    className="flex items-center space-x-3 w-full px-6 py-3 text-white/90 hover:text-white hover:bg-black/20 transition-colors"
                     onClick={() => setShowUserMenu(false)}
                   >
                     <User className="h-5 w-5 text-white/70" />
@@ -122,7 +123,7 @@ export function AdminHeader() {
 
                   <button
                     onClick={logout}
-                    className="flex items-center space-x-3 w-full px-6 py-3 text-white/90 hover:text-white hover:bg-slate-700/50 transition-colors"
+                    className="flex items-center space-x-3 w-full px-6 py-3 text-white/90 hover:text-white hover:bg-black/20 transition-colors"
                   >
                     <LogOut className="h-5 w-5 text-white/70" />
                     <span className="text-base">Logout</span>

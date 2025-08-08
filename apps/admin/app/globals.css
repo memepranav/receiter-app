@@ -213,6 +213,19 @@ input::-webkit-contacts-auto-fill-button {
   border-color: #E2E8F0 !important;
 }
 
+/* Ensure primary color variables work correctly in Safari */
+.bg-primary {
+  background-color: #5955DD !important;
+}
+
+.text-primary {
+  color: #5955DD !important;
+}
+
+.hover\\:bg-primary-hover:hover {
+  background-color: #4A46C7 !important;
+}
+
 /* Specific table border overrides */
 table tr {
   border-bottom: 1px solid #E2E8F0 !important;

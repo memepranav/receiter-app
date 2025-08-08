@@ -28,8 +28,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!user
 
   useEffect(() => {
-    checkAuth()
+    // Only check auth if we're not on the login page
+    const currentPath = window.location.pathname
+    if (currentPath !== '/login') {
+      checkAuth()
+    } else {
+      // On login page, just check if we have a token and redirect if already authenticated
+      const token = localStorage.getItem('admin_token')
+      if (token) {
+        // Verify token without showing loading state
+        verifyTokenAndRedirect(token)
+      } else {
+        setIsLoading(false)
+      }
+    }
   }, [])
+
+  const verifyTokenAndRedirect = async (token: string) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'http://localhost:3001'
+      const response = await fetch(`${apiUrl}/api/admin/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const userData = await response.json()
+        const user = userData.data || userData
+        setUser(user)
+        router.push('/dashboard') // Redirect to dashboard if already authenticated
+      } else {
+        // Token is invalid, remove it
+        localStorage.removeItem('admin_token')
+      }
+    } catch (error) {
+      // On error, remove token and stay on login page
+      localStorage.removeItem('admin_token')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const checkAuth = async () => {
     try {
@@ -46,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'http://localhost:4000'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'http://localhost:3001'
       const response = await fetch(`${apiUrl}/api/admin/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -91,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       console.log('🔐 Attempting login for:', email)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'http://localhost:4000'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'http://localhost:3001'
       const response = await fetch(`${apiUrl}/api/admin/auth/login`, {
         method: 'POST',
         headers: {

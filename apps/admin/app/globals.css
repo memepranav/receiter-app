@@ -2,246 +2,122 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Override autofill and focus styles completely */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px white inset !important;
-  box-shadow: 0 0 0 30px white inset !important;
-  border: 1px solid #e5e7eb !important;
-  -webkit-text-fill-color: #1f2937 !important;
-}
-
-input:focus,
-input:focus-visible,
-input:active {
-  outline: none !important;
-  border: 1px solid #e5e7eb !important;
-  box-shadow: none !important;
-  ring: none !important;
-  -webkit-appearance: none !important;
-}
-
-/* Force remove any yellow/colored borders or backgrounds */
-input[type="email"],
-input[type="password"],
-input[type="text"] {
-  border: 1px solid #e5e7eb !important;
-  background-color: white !important;
-}
-
-input[type="email"]:focus,
-input[type="password"]:focus,
-input[type="text"]:focus {
-  border: 1px solid #e5e7eb !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
 @layer base {
   :root {
-    --background: 245 245 245; /* #F5F5F5 */
-    --foreground: 30 41 59; /* #1E293B */
-    --card: 255 255 255; /* #FFFFFF */
-    --card-foreground: 30 41 59; /* #1E293B */
+    --background: 245 245 245; /* Light gray background */
+    --foreground: 30 41 59; /* Dark text */
+    --card: 255 255 255; /* White cards */
+    --card-foreground: 30 41 59; /* Dark text on cards */
     --popover: 255 255 255;
     --popover-foreground: 30 41 59;
-    --primary: 89 85 221; /* #5955DD */
+    --primary: 89 85 221; /* Brand blue #5955DD */
     --primary-foreground: 255 255 255;
-    --secondary: 241 73 254; /* #F149FE */
+    --secondary: 241 73 254; /* Brand pink #F149FE */
     --secondary-foreground: 255 255 255;
-    --muted: 232 232 232; /* #E8E8E8 */
-    --muted-foreground: 100 116 139; /* #64748B */
+    --muted: 232 232 232; /* Light gray */
+    --muted-foreground: 100 116 139; /* Gray text */
     --accent: 241 245 249;
     --accent-foreground: 30 41 59;
     --destructive: 239 68 68;
     --destructive-foreground: 248 250 252;
-    --border: 226 232 240; /* #E2E8F0 */
-    --input: 209 213 219; /* #D1D5DB */
+    --border: 226 232 240; /* Light gray borders */
+    --input: 209 213 219; /* Input borders */
     --ring: 89 85 221;
     --radius: 0.5rem;
   }
-
-  .dark {
-    --background: 30 41 59; /* #1E293B */
-    --foreground: 248 250 252; /* #F8FAFC */
-    --card: 51 65 85; /* #334155 */
-    --card-foreground: 248 250 252;
-    --popover: 51 65 85;
-    --popover-foreground: 248 250 252;
-    --primary: 89 85 221;
-    --primary-foreground: 255 255 255;
-    --secondary: 241 73 254;
-    --secondary-foreground: 255 255 255;
-    --muted: 71 85 105; /* #475569 */
-    --muted-foreground: 148 163 184; /* #94A3B8 */
-    --accent: 51 65 85;
-    --accent-foreground: 248 250 252;
-    --destructive: 239 68 68;
-    --destructive-foreground: 248 250 252;
-    --border: 71 85 105; /* #475569 */
-    --input: 71 85 105;
-    --ring: 89 85 221;
-  }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  html {
-    @apply bg-background;
-    background-color: #F5F5F5 !important;
-    direction: ltr !important;
-  }
-  body {
-    @apply bg-background text-foreground min-h-screen;
-    background-color: #F5F5F5 !important;
-  }
-  #__next {
-    @apply bg-background min-h-screen;
-    background-color: #F5F5F5 !important;
-  }
+/* Simple base styles */
+html {
+  background-color: #F5F5F5;
 }
 
-
-
-/* Override browser autofill yellow background */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px white inset !important;
-  -webkit-text-fill-color: #1E293B !important;
-  box-shadow: 0 0 0 30px white inset !important;
-  background-color: white !important;
-  transition: background-color 5000s ease-in-out 0s;
+body {
+  background-color: #F5F5F5;
+  color: #1E293B;
+  min-height: 100vh;
 }
 
-/* Dark theme autofill override */
-.dark input:-webkit-autofill,
-.dark input:-webkit-autofill:hover,
-.dark input:-webkit-autofill:focus,
-.dark input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px #334155 inset !important;
-  -webkit-text-fill-color: #F8FAFC !important;
-  box-shadow: 0 0 0 30px #334155 inset !important;
-  background-color: #334155 !important;
-}
-
-/* Force normal input styling */
+/* Clean input styles */
+input,
 input[type="email"],
 input[type="password"],
 input[type="text"] {
-  background-color: white !important;
-  color: #1E293B !important;
+  background-color: white;
+  border: 1px solid #D1D5DB;
+  color: #1E293B;
 }
 
-/* Firefox autofill override */
-input:-moz-autofill {
-  background-color: white !important;
-  color: #1E293B !important;
+input:focus {
+  outline: none;
+  border-color: #5955DD;
+  box-shadow: 0 0 0 3px rgba(89, 85, 221, 0.1);
 }
 
-/* Safari-specific overrides for any yellow backgrounds */
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-  body,
-  html,
-  #__next,
-  * {
-    background-color: #F5F5F5 !important;
-  }
-  
-  input,
-  input[type="email"],
-  input[type="password"],
-  input[type="text"],
-  input[type="search"] {
-    background-color: white !important;
-    -webkit-appearance: none !important;
-    -webkit-background-clip: text !important;
-  }
-  
-  /* Force remove any yellow or colored backgrounds */
-  .gradient-primary,
-  .gradient-secondary,
-  .gradient-dual,
-  .gradient-primary-soft,
-  .gradient-secondary-soft {
-    background: #5955DD !important;
-    background-color: #5955DD !important;
-    background-image: none !important;
-  }
-  
-  /* Fix table borders to use proper gray instead of yellow */
-  table,
-  thead,
-  tbody,
-  tr,
-  th,
-  td {
-    border-color: #E2E8F0 !important;
-  }
-  
-  .border-b {
-    border-bottom-color: #E2E8F0 !important;
-  }
-  
-  [class*="border"] {
-    border-color: #E2E8F0 !important;
-  }
+/* Simple table styles */
+table {
+  border-collapse: collapse;
 }
 
-/* Additional Safari-specific webkit overrides */
-input[type="email"]:not(:focus):not(:active):invalid:not(:placeholder-shown) {
-  background-color: white !important;
-}
-
-/* Completely disable webkit autofill styling */
-input::-webkit-contacts-auto-fill-button {
-  visibility: hidden;
-  display: none !important;
-  pointer-events: none;
-  height: 0;
-  width: 0;
-  margin: 0;
-}
-
-/* Global override for any remaining yellow borders */
-* {
-  border-color: #E2E8F0 !important;
-}
-
-/* Ensure primary color variables work correctly in Safari */
-.bg-primary {
-  background-color: #5955DD !important;
-}
-
-.text-primary {
-  color: #5955DD !important;
-}
-
-.hover\\:bg-primary-hover:hover {
-  background-color: #4A46C7 !important;
-}
-
-/* Specific table border overrides */
 table tr {
-  border-bottom: 1px solid #E2E8F0 !important;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 table thead tr {
-  border-bottom: 1px solid #E2E8F0 !important;
+  border-bottom: 1px solid #E2E8F0;
 }
 
-/* Force all border classes to use gray */
-.border,
-.border-b,
-.border-t,
-.border-l,
-.border-r,
-.border-x,
-.border-y {
-  border-color: #E2E8F0 !important;
+/* Clean button styles */
+.btn-primary {
+  background-color: #5955DD;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #4A46C7;
+}
+
+/* Header styles */
+.header-dark {
+  background-color: #1E2A3B;
+  color: white;
+}
+
+/* Card styles */
+.card-blue {
+  background-color: #2563EB;
+  color: white;
+}
+
+.card-purple {
+  background-color: #9333EA;
+  color: white;
+}
+
+.card-gray {
+  background-color: #F8FAFC;
+  color: #1E293B;
+}
+
+/* Utility classes */
+.bg-primary {
+  background-color: #5955DD;
+}
+
+.bg-secondary {
+  background-color: #F149FE;
+}
+
+.text-primary {
+  color: #5955DD;
+}
+
+.border-gray {
+  border-color: #E2E8F0;
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { User, Mail, Calendar, Shield, Edit, Save, X, Key, Settings, Server, Database, Lock, Globe, Upload, Clock, Coins } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { AdminLayout } from '@/components/layout/admin-layout'
+import { ProtectedRoute } from '@/components/auth/protected-route'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -69,6 +70,16 @@ interface SystemConfig {
 }
 
 export default function ProfilePage() {
+  return (
+    <ProtectedRoute>
+      <AdminLayout>
+        <ProfilePageContent />
+      </AdminLayout>
+    </ProtectedRoute>
+  )
+}
+
+function ProfilePageContent() {
   const { user } = useAuth()
   const [profile, setProfile] = useState<AdminProfile | null>(null)
   const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null)
@@ -109,12 +120,20 @@ export default function ProfilePage() {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('admin_token')
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+      console.log('🔍 Fetching profile from:', `${apiUrl}/api/admin/auth/me`)
+      
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
       const response = await fetch(`${apiUrl}/api/admin/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId)
 
       if (response.ok) {
         const result = await response.json()
@@ -125,9 +144,18 @@ export default function ProfilePage() {
           lastName: profileData.profile?.lastName || '',
           displayName: profileData.profile?.displayName || ''
         })
+      } else if (response.status === 429) {
+        console.error('Rate limited - too many requests to server API')
+        // Don't set profile to null, keep trying
+      } else {
+        console.error('Failed to fetch profile:', response.status, response.statusText)
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error)
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.error('Profile fetch timed out')
+      } else {
+        console.error('Error fetching profile:', error)
+      }
     } finally {
       setLoading(false)
     }
@@ -137,20 +165,48 @@ export default function ProfilePage() {
     try {
       const token = localStorage.getItem('admin_token')
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+      console.log('⚙️ Fetching system config from:', `${apiUrl}/api/admin/settings`)
+      
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
       const response = await fetch(`${apiUrl}/api/admin/settings`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        signal: controller.signal
       })
+      
+      clearTimeout(timeoutId)
 
       if (response.ok) {
         const result = await response.json()
         const config = result.data || result
         setSystemConfig(config)
         setConfigData(config)
+      } else if (response.status === 429) {
+        console.error('Rate limited - too many requests to server API for system config')
+        // Set default config to allow page to render
+        const defaultConfig = {
+          jwt: { expiresIn: '1h', refreshExpiresIn: '30d' },
+          cors: { origins: '' },
+          rateLimit: { window: 900000, max: 100 },
+          upload: { maxFileSize: 10485760, uploadDir: './uploads' },
+          email: { smtpHost: 'smtp.gmail.com', smtpPort: 587, smtpUser: '' },
+          solana: { network: 'devnet', rpcUrl: 'https://api.devnet.solana.com' },
+          app: { name: 'Quran Reciter API', version: '1.0.0' }
+        }
+        setSystemConfig(defaultConfig)
+        setConfigData(defaultConfig)
+      } else {
+        console.error('Failed to fetch system config:', response.status, response.statusText)
       }
-    } catch (error) {
-      console.error('Error fetching system config:', error)
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.error('System config fetch timed out')
+      } else {
+        console.error('Error fetching system config:', error)
+      }
     } finally {
       setConfigLoading(false)
     }
@@ -261,7 +317,10 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
       </div>
     )
   }
@@ -269,9 +328,22 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Profile not found</h2>
-          <p className="text-muted-foreground">Unable to load profile data</p>
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold mb-2">Connection Issue</h2>
+          <p className="text-muted-foreground mb-4">
+            Unable to load profile data. This might be due to server rate limiting or connectivity issues.
+          </p>
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>• Check if you're logged in properly</p>
+            <p>• Server may be rate limiting requests</p>
+            <p>• Try refreshing the page in a few minutes</p>
+          </div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+          >
+            Retry
+          </button>
         </div>
       </div>
     )

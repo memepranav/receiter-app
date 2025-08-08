@@ -364,6 +364,11 @@ Based on the mobile app design:
 
 ## Port Configurations:
 
-# Local host is connected in 3005, and no API or Database in Local.
-# Local Host is connected to the Live API
-# Server files are using 3000 for admin and 3001 for APIß
+# Current Setup (August 2025):
+# - Admin Panel: localhost:3000 (Next.js - runs locally)
+# - API Server: 161.35.11.154:3001 (NestJS - runs on server)
+# - Database: MongoDB on server 161.35.11.154:27017
+# - Redis Cache: Server 161.35.11.154:6379
+#
+# IMPORTANT: Never modify apps/admin/.env.local - keep it pointing to server API
+# Admin panel connects to live server API and database for all operations

@@ -118,6 +118,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const user = userData.data || userData
         localStorage.setItem('admin_user', JSON.stringify(user))
         setUser(user)
+      } else if (response.status === 429) {
+        console.log('⏱️ Rate limited - keeping token and user session')
+        // Don't remove token on rate limiting, restore user from stored info
+        const storedUser = localStorage.getItem('admin_user')
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser))
+            console.log('👤 Restored user from localStorage due to rate limiting')
+          } catch (e) {
+            console.log('Failed to parse stored user data during rate limit')
+          }
+        }
       } else {
         console.log('❌ Auth failed, removing token. Status:', response.status)
         // Only remove token on 401/403, not on network errors

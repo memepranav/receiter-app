@@ -28,6 +28,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!user
 
   useEffect(() => {
+    // First, try to restore user from localStorage immediately to avoid header flickering
+    const storedUser = localStorage.getItem('admin_user')
+    const storedToken = localStorage.getItem('admin_token')
+    
+    if (storedUser && storedToken) {
+      try {
+        const parsedUser = JSON.parse(storedUser)
+        setUser(parsedUser)
+        console.log('👤 Restored user from localStorage on init:', parsedUser.name)
+      } catch (e) {
+        console.log('Failed to parse stored user data on init')
+      }
+    }
+
     // Only check auth if we're not on the login page
     const currentPath = window.location.pathname
     if (currentPath !== '/login') {

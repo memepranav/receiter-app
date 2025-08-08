@@ -42,7 +42,7 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <CardTitle className="text-3xl font-bold text-primary">
                 Admin Portal
               </CardTitle>
               <CardDescription className="text-base text-muted-foreground">
@@ -94,7 +94,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 text-base font-semibold gradient-dual hover:opacity-90 transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="w-full h-12 text-base font-semibold bg-primary text-white hover:bg-primary-hover transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">

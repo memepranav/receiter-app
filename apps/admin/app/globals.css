@@ -173,6 +173,24 @@ input:-moz-autofill {
     background-color: #5955DD !important;
     background-image: none !important;
   }
+  
+  /* Fix table borders to use proper gray instead of yellow */
+  table,
+  thead,
+  tbody,
+  tr,
+  th,
+  td {
+    border-color: #E2E8F0 !important;
+  }
+  
+  .border-b {
+    border-bottom-color: #E2E8F0 !important;
+  }
+  
+  [class*="border"] {
+    border-color: #E2E8F0 !important;
+  }
 }
 
 /* Additional Safari-specific webkit overrides */
@@ -188,4 +206,29 @@ input::-webkit-contacts-auto-fill-button {
   height: 0;
   width: 0;
   margin: 0;
+}
+
+/* Global override for any remaining yellow borders */
+* {
+  border-color: #E2E8F0 !important;
+}
+
+/* Specific table border overrides */
+table tr {
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+table thead tr {
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+/* Force all border classes to use gray */
+.border,
+.border-b,
+.border-t,
+.border-l,
+.border-r,
+.border-x,
+.border-y {
+  border-color: #E2E8F0 !important;
 }

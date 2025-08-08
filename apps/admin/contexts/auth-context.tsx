@@ -102,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('✅ Auth successful:', userData)
         // Handle the wrapped response structure from NestJS
         const user = userData.data || userData
+        localStorage.setItem('admin_user', JSON.stringify(user))
         setUser(user)
       } else {
         console.log('❌ Auth failed, removing token. Status:', response.status)
@@ -115,11 +116,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (error.name === 'AbortError') {
         console.log('⏱️ Auth check timed out - keeping token for retry')
-      } else if (error.message?.includes('fetch')) {
+        // Don't remove token on timeout, just keep user logged in
+      } else if (error.message?.includes('fetch') || error.message?.includes('NetworkError') || error.message?.includes('Failed to fetch')) {
         console.log('🔄 Network error during auth check - keeping token for retry')
+        // Don't remove token on network errors, restore user from stored info if available
+        const storedUser = localStorage.getItem('admin_user')
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser))
+            console.log('👤 Restored user from localStorage due to network error')
+          } catch (e) {
+            console.log('Failed to parse stored user data')
+          }
+        }
       } else {
         console.log('❌ Auth check failed - removing token')
         localStorage.removeItem('admin_token')
+        setUser(null)
       }
     } finally {
       setIsLoading(false)
@@ -161,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fullResponse: responseData 
       })
       localStorage.setItem('admin_token', token)
+      localStorage.setItem('admin_user', JSON.stringify(responseData.user))
       setUser(responseData.user)
       router.push('/dashboard')
     } catch (error) {
@@ -173,6 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_user')
     setUser(null)
     router.push('/login')
   }

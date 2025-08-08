@@ -145,15 +145,33 @@ export class RecitationsService {
    * Get list of all Juz with detailed information
    */
   async getJuzList(): Promise<any> {
+    console.log('🔥 NEW ENHANCED getJuzList() method is running!');
     const cacheKey = 'juz:list';
-    const cached = await this.redisService.get(cacheKey);
+    
+    // TEMPORARILY DISABLE CACHE TO TEST NEW FORMAT
+    // const cached = await this.redisService.get(cacheKey);
+    // if (cached) {
+    //   console.log('⚠️ Returning cached result - this might be OLD data');
+    //   return JSON.parse(cached);
+    // }
 
-    if (cached) {
-      return JSON.parse(cached);
-    }
+    console.log('✅ Cache disabled - generating NEW format response');
 
-    // Aggregate to get detailed Juz list with start/end surah info and ranges
-    const juzList = await this.quranAyahModel.aggregate([
+    // Get enhanced Juz list with Hizb information
+    const juzList = await this.buildEnhancedJuzList();
+
+    // Cache for 1 hour
+    await this.redisService.set(cacheKey, JSON.stringify(juzList), 3600);
+
+    return juzList;
+  }
+
+  /**
+   * Build enhanced Juz list with Hizb and Quarter information
+   */
+  private async buildEnhancedJuzList(): Promise<any[]> {
+    // Step 1: Get all Juz with basic info
+    const juzData = await this.quranAyahModel.aggregate([
       {
         $group: {
           _id: '$juz_number',
@@ -168,119 +186,181 @@ export class RecitationsService {
           }
         }
       },
-      {
-        $sort: { juz_number: 1 }
-      },
-      {
-        $addFields: {
-          // Sort ayahs to get first and last properly
-          sortedAyahs: {
-            $sortArray: {
-              input: '$ayahs',
-              sortBy: { sura_number: 1, ayah_number: 1 }
-            }
-          }
-        }
-      },
-      {
-        $addFields: {
-          startAyah: { $first: '$sortedAyahs' },
-          endAyah: { $last: '$sortedAyahs' }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          number: '$juz_number',
-          name: { 
-            $switch: {
-              branches: [
-                { case: { $eq: ['$juz_number', 1] }, then: 'الجزء الأول' },
-                { case: { $eq: ['$juz_number', 2] }, then: 'الجزء الثاني' },
-                { case: { $eq: ['$juz_number', 3] }, then: 'الجزء الثالث' },
-                { case: { $eq: ['$juz_number', 4] }, then: 'الجزء الرابع' },
-                { case: { $eq: ['$juz_number', 5] }, then: 'الجزء الخامس' },
-                { case: { $eq: ['$juz_number', 6] }, then: 'الجزء السادس' },
-                { case: { $eq: ['$juz_number', 7] }, then: 'الجزء السابع' },
-                { case: { $eq: ['$juz_number', 8] }, then: 'الجزء الثامن' },
-                { case: { $eq: ['$juz_number', 9] }, then: 'الجزء التاسع' },
-                { case: { $eq: ['$juz_number', 10] }, then: 'الجزء العاشر' },
-                { case: { $eq: ['$juz_number', 11] }, then: 'الجزء الحادي عشر' },
-                { case: { $eq: ['$juz_number', 12] }, then: 'الجزء الثاني عشر' },
-                { case: { $eq: ['$juz_number', 13] }, then: 'الجزء الثالث عشر' },
-                { case: { $eq: ['$juz_number', 14] }, then: 'الجزء الرابع عشر' },
-                { case: { $eq: ['$juz_number', 15] }, then: 'الجزء الخامس عشر' },
-                { case: { $eq: ['$juz_number', 16] }, then: 'الجزء السادس عشر' },
-                { case: { $eq: ['$juz_number', 17] }, then: 'الجزء السابع عشر' },
-                { case: { $eq: ['$juz_number', 18] }, then: 'الجزء الثامن عشر' },
-                { case: { $eq: ['$juz_number', 19] }, then: 'الجزء التاسع عشر' },
-                { case: { $eq: ['$juz_number', 20] }, then: 'الجزء العشرون' },
-                { case: { $eq: ['$juz_number', 21] }, then: 'الجزء الحادي والعشرون' },
-                { case: { $eq: ['$juz_number', 22] }, then: 'الجزء الثاني والعشرون' },
-                { case: { $eq: ['$juz_number', 23] }, then: 'الجزء الثالث والعشرون' },
-                { case: { $eq: ['$juz_number', 24] }, then: 'الجزء الرابع والعشرون' },
-                { case: { $eq: ['$juz_number', 25] }, then: 'الجزء الخامس والعشرون' },
-                { case: { $eq: ['$juz_number', 26] }, then: 'الجزء السادس والعشرون' },
-                { case: { $eq: ['$juz_number', 27] }, then: 'الجزء السابع والعشرون' },
-                { case: { $eq: ['$juz_number', 28] }, then: 'الجزء الثامن والعشرون' },
-                { case: { $eq: ['$juz_number', 29] }, then: 'الجزء التاسع والعشرون' },
-                { case: { $eq: ['$juz_number', 30] }, then: 'الجزء الثلاثون' }
-              ],
-              default: { $concat: ['الجزء ', { $toString: '$juz_number' }] }
-            }
-          },
-          englishName: { $concat: ['Juz ', { $toString: '$juz_number' }] },
-          totalAyahs: 1,
-          startSurah: {
-            number: '$startAyah.sura_number',
-            name: '$startAyah.sura_name_arabic',
-            startAyah: '$startAyah.ayah_number'
-          },
-          endSurah: {
-            number: '$endAyah.sura_number',
-            name: '$endAyah.sura_name_arabic',
-            endAyah: '$endAyah.ayah_number'
-          },
-          displayName: {
-            $concat: [
-              '$startAyah.sura_name_arabic',
-              ' (',
-              { $toString: '$startAyah.sura_number' },
-              ':',
-              { $toString: '$startAyah.ayah_number' },
-              ') - ',
-              '$endAyah.sura_name_arabic',
-              ' (',
-              { $toString: '$endAyah.sura_number' },
-              ':',
-              { $toString: '$endAyah.ayah_number' },
-              ')'
-            ]
-          },
-          range: {
-            $concat: [
-              '$startAyah.sura_name_arabic',
-              ' (',
-              { $toString: '$startAyah.sura_number' },
-              ':',
-              { $toString: '$startAyah.ayah_number' },
-              ') - ',
-              '$endAyah.sura_name_arabic',
-              ' (',
-              { $toString: '$endAyah.sura_number' },
-              ':',
-              { $toString: '$endAyah.ayah_number' },
-              ')'
-            ]
-          }
-        }
-      }
+      { $sort: { juz_number: 1 } }
     ]).exec();
 
-    // Cache for 1 hour
-    await this.redisService.set(cacheKey, JSON.stringify(juzList), 3600);
+    // Step 2: Get Hizb information for all Juz
+    const hizbData = await this.quranAyahModel.aggregate([
+      {
+        $group: {
+          _id: { juz_number: '$juz_number', hizb_number: '$hizb_number' },
+          juz_number: { $first: '$juz_number' },
+          hizb_number: { $first: '$hizb_number' },
+          totalAyahs: { $sum: 1 },
+          ayahs: { 
+            $push: {
+              sura_number: '$sura_number',
+              sura_name_arabic: '$sura_name_arabic',
+              ayah_number: '$ayah_number',
+              quarter_hizb_segment: '$quarter_hizb_segment'
+            }
+          }
+        }
+      },
+      { $sort: { juz_number: 1, hizb_number: 1 } }
+    ]).exec();
 
-    return juzList;
+    // Step 3: Get Quarter information
+    const quarterData = await this.quranAyahModel.aggregate([
+      {
+        $addFields: {
+          quarter_number: { $toInt: { $substr: ['$quarter_hizb_segment', 0, 1] } },
+          rub_number: {
+            $add: [
+              { $multiply: [{ $subtract: ['$hizb_number', 1] }, 4] },
+              { $toInt: { $substr: ['$quarter_hizb_segment', 0, 1] } }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { 
+            juz_number: '$juz_number', 
+            hizb_number: '$hizb_number', 
+            quarter_number: '$quarter_number' 
+          },
+          juz_number: { $first: '$juz_number' },
+          hizb_number: { $first: '$hizb_number' },
+          quarter_number: { $first: '$quarter_number' },
+          rub_number: { $first: '$rub_number' },
+          totalAyahs: { $sum: 1 },
+          ayahs: { 
+            $push: {
+              sura_number: '$sura_number',
+              sura_name_arabic: '$sura_name_arabic',
+              ayah_number: '$ayah_number'
+            }
+          }
+        }
+      },
+      { $sort: { juz_number: 1, hizb_number: 1, quarter_number: 1 } }
+    ]).exec();
+
+    // Step 4: Build the enhanced structure
+    return juzData.map(juz => {
+      const sortedAyahs = juz.ayahs.sort((a, b) => {
+        if (a.sura_number !== b.sura_number) return a.sura_number - b.sura_number;
+        return a.ayah_number - b.ayah_number;
+      });
+
+      const startAyah = sortedAyahs[0];
+      const endAyah = sortedAyahs[sortedAyahs.length - 1];
+
+      // Get Hizb data for this Juz
+      const juzHizbs = hizbData.filter(h => h.juz_number === juz.juz_number);
+
+      const hizbs = juzHizbs.map(hizb => {
+        const hizbAyahs = hizb.ayahs.sort((a, b) => {
+          if (a.sura_number !== b.sura_number) return a.sura_number - b.sura_number;
+          return a.ayah_number - b.ayah_number;
+        });
+
+        const hizbStart = hizbAyahs[0];
+        const hizbEnd = hizbAyahs[hizbAyahs.length - 1];
+
+        // Get quarters for this Hizb
+        const hizbQuarters = quarterData.filter(q => 
+          q.juz_number === juz.juz_number && q.hizb_number === hizb.hizb_number
+        );
+
+        const quarters = hizbQuarters.map(quarter => {
+          const quarterAyahs = quarter.ayahs.sort((a, b) => {
+            if (a.sura_number !== b.sura_number) return a.sura_number - b.sura_number;
+            return a.ayah_number - b.ayah_number;
+          });
+
+          const qStart = quarterAyahs[0];
+          const qEnd = quarterAyahs[quarterAyahs.length - 1];
+
+          return {
+            quarterNumber: quarter.quarter_number,
+            rubNumber: quarter.rub_number,
+            range: `${qStart.sura_name_arabic} (${qStart.sura_number}:${qStart.ayah_number}) - ${qEnd.sura_name_arabic} (${qEnd.sura_number}:${qEnd.ayah_number})`,
+            totalAyahs: quarter.totalAyahs
+          };
+        });
+
+        return {
+          hizbNumber: hizb.hizb_number,
+          name: this.getHizbName(hizb.hizb_number),
+          range: `${hizbStart.sura_name_arabic} (${hizbStart.sura_number}:${hizbStart.ayah_number}) - ${hizbEnd.sura_name_arabic} (${hizbEnd.sura_number}:${hizbEnd.ayah_number})`,
+          totalAyahs: hizb.totalAyahs,
+          quarters
+        };
+      });
+
+      return {
+        totalAyahs: juz.totalAyahs,
+        number: juz.juz_number,
+        name: this.getJuzName(juz.juz_number),
+        englishName: `Juz ${juz.juz_number}`,
+        startSurah: {
+          number: startAyah.sura_number,
+          name: startAyah.sura_name_arabic,
+          startAyah: startAyah.ayah_number
+        },
+        endSurah: {
+          number: endAyah.sura_number,
+          name: endAyah.sura_name_arabic,
+          endAyah: endAyah.ayah_number
+        },
+        displayName: `${startAyah.sura_name_arabic} (${startAyah.sura_number}:${startAyah.ayah_number}) - ${endAyah.sura_name_arabic} (${endAyah.sura_number}:${endAyah.ayah_number})`,
+        range: `${startAyah.sura_name_arabic} (${startAyah.sura_number}:${startAyah.ayah_number}) - ${endAyah.sura_name_arabic} (${endAyah.sura_number}:${endAyah.ayah_number})`,
+        hizbs
+      };
+    });
+  }
+
+  /**
+   * Get proper Arabic name for Juz
+   */
+  private getJuzName(juzNumber: number): string {
+    const names = {
+      1: 'الجزء الأول', 2: 'الجزء الثاني', 3: 'الجزء الثالث', 4: 'الجزء الرابع',
+      5: 'الجزء الخامس', 6: 'الجزء السادس', 7: 'الجزء السابع', 8: 'الجزء الثامن',
+      9: 'الجزء التاسع', 10: 'الجزء العاشر', 11: 'الجزء الحادي عشر', 12: 'الجزء الثاني عشر',
+      13: 'الجزء الثالث عشر', 14: 'الجزء الرابع عشر', 15: 'الجزء الخامس عشر', 16: 'الجزء السادس عشر',
+      17: 'الجزء السابع عشر', 18: 'الجزء الثامن عشر', 19: 'الجزء التاسع عشر', 20: 'الجزء العشرون',
+      21: 'الجزء الحادي والعشرون', 22: 'الجزء الثاني والعشرون', 23: 'الجزء الثالث والعشرون', 24: 'الجزء الرابع والعشرون',
+      25: 'الجزء الخامس والعشرون', 26: 'الجزء السادس والعشرون', 27: 'الجزء السابع والعشرون', 28: 'الجزء الثامن والعشرون',
+      29: 'الجزء التاسع والعشرون', 30: 'الجزء الثلاثون'
+    };
+    return names[juzNumber] || `الجزء ${juzNumber}`;
+  }
+
+  /**
+   * Get proper Arabic name for Hizb
+   */
+  private getHizbName(hizbNumber: number): string {
+    const names = {
+      1: 'الحزب الأول', 2: 'الحزب الثاني', 3: 'الحزب الثالث', 4: 'الحزب الرابع',
+      5: 'الحزب الخامس', 6: 'الحزب السادس', 7: 'الحزب السابع', 8: 'الحزب الثامن',
+      9: 'الحزب التاسع', 10: 'الحزب العاشر', 11: 'الحزب الحادي عشر', 12: 'الحزب الثاني عشر',
+      13: 'الحزب الثالث عشر', 14: 'الحزب الرابع عشر', 15: 'الحزب الخامس عشر', 16: 'الحزب السادس عشر',
+      17: 'الحزب السابع عشر', 18: 'الحزب الثامن عشر', 19: 'الحزب التاسع عشر', 20: 'الحزب العشرون',
+      21: 'الحزب الحادي والعشرون', 22: 'الحزب الثاني والعشرون', 23: 'الحزب الثالث والعشرون', 24: 'الحزب الرابع والعشرون',
+      25: 'الحزب الخامس والعشرون', 26: 'الحزب السادس والعشرون', 27: 'الحزب السابع والعشرون', 28: 'الحزب الثامن والعشرون',
+      29: 'الحزب التاسع والعشرون', 30: 'الحزب الثلاثون', 31: 'الحزب الحادي والثلاثون', 32: 'الحزب الثاني والثلاثون',
+      33: 'الحزب الثالث والثلاثون', 34: 'الحزب الرابع والثلاثون', 35: 'الحزب الخامس والثلاثون', 36: 'الحزب السادس والثلاثون',
+      37: 'الحزب السابع والثلاثون', 38: 'الحزب الثامن والثلاثون', 39: 'الحزب التاسع والثلاثون', 40: 'الحزب الأربعون',
+      41: 'الحزب الحادي والأربعون', 42: 'الحزب الثاني والأربعون', 43: 'الحزب الثالث والأربعون', 44: 'الحزب الرابع والأربعون',
+      45: 'الحزب الخامس والأربعون', 46: 'الحزب السادس والأربعون', 47: 'الحزب السابع والأربعون', 48: 'الحزب الثامن والأربعون',
+      49: 'الحزب التاسع والأربعون', 50: 'الحزب الخمسون', 51: 'الحزب الحادي والخمسون', 52: 'الحزب الثاني والخمسون',
+      53: 'الحزب الثالث والخمسون', 54: 'الحزب الرابع والخمسون', 55: 'الحزب الخامس والخمسون', 56: 'الحزب السادس والخمسون',
+      57: 'الحزب السابع والخمسون', 58: 'الحزب الثامن والخمسون', 59: 'الحزب التاسع والخمسون', 60: 'الحزب الستون'
+    };
+    return names[hizbNumber] || `الحزب ${hizbNumber}`;
   }
 
   /**

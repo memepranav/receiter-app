@@ -16,7 +16,7 @@ export function AdminHeader() {
   const dropdownRef = useClickOutside<HTMLDivElement>(() => setShowUserMenu(false), showUserMenu)
 
   return (
-    <header className="bg-primary text-white" style={{backgroundColor: '#5955DD'}}>
+    <header className="text-white" style={{backgroundColor: '#1e2a3b'}}>
       <div className="flex items-center justify-between px-6 py-4">
         {/* Logo */}
         <div className="flex items-center space-x-3">
@@ -104,7 +104,7 @@ export function AdminHeader() {
 
             {/* User Dropdown Menu */}
             {showUserMenu && (
-              <div className="absolute right-0 mt-3 w-64 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 z-50 overflow-hidden" style={{backgroundColor: 'rgba(89, 85, 221, 0.95)'}}>
+              <div className="absolute right-0 mt-3 w-64 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 z-50 overflow-hidden" style={{backgroundColor: 'rgba(30, 42, 59, 0.95)'}}>
                 {/* Header Section with User Name */}
                 <div className="px-6 py-4 border-b border-white/20">
                   <div className="text-white text-lg font-medium">{user?.name || 'Admin User'}</div>

@@ -400,4 +400,42 @@ export class RecitationsController {
   ) {
     return this.recitationsService.getQuarter(juzNumber, hizbNumber, quarterNumber, query, user.id);
   }
+
+  @ApiOperation({ 
+    summary: 'Get specific Rubʿ al-Hizb by direct rub number',
+    description: 'Returns ayahs for a specific rub number (1-240) with simplified format'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Rub retrieved successfully',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          rubNumber: 1,
+          hizbNumber: 1,
+          juzNumber: 1,
+          ayahs: [
+            {
+              number: 1,
+              text: "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+              surahNumber: 1,
+              surahName: "الفاتحة",
+              translation: "In the name of Allah..."
+            }
+          ]
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 404, description: 'Rub not found' })
+  @ApiParam({ name: 'rubNumber', description: 'Rub number (1-240)', example: 1 })
+  @Get('rub/:rubNumber')
+  async getRub(
+    @Param('rubNumber', ParseIntPipe) rubNumber: number,
+    @Query() query: GetQuranQueryDto,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.recitationsService.getRub(rubNumber, query, user.id);
+  }
 }

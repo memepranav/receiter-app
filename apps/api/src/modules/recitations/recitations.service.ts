@@ -142,7 +142,7 @@ export class RecitationsService {
   }
 
   /**
-   * Get list of all Juz
+   * Get list of all Juz with detailed information
    */
   async getJuzList(): Promise<any> {
     const cacheKey = 'juz:list';
@@ -152,17 +152,18 @@ export class RecitationsService {
       return JSON.parse(cached);
     }
 
-    // Aggregate to get Juz list from quran_ayahs
+    // Aggregate to get detailed Juz list with start/end surah info and ranges
     const juzList = await this.quranAyahModel.aggregate([
       {
         $group: {
           _id: '$juz_number',
           juz_number: { $first: '$juz_number' },
           totalAyahs: { $sum: 1 },
-          surahs: { 
-            $addToSet: {
+          ayahs: { 
+            $push: {
               sura_number: '$sura_number',
-              sura_name_arabic: '$sura_name_arabic'
+              sura_name_arabic: '$sura_name_arabic',
+              ayah_number: '$ayah_number'
             }
           }
         }
@@ -171,13 +172,107 @@ export class RecitationsService {
         $sort: { juz_number: 1 }
       },
       {
+        $addFields: {
+          // Sort ayahs to get first and last properly
+          sortedAyahs: {
+            $sortArray: {
+              input: '$ayahs',
+              sortBy: { sura_number: 1, ayah_number: 1 }
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          startAyah: { $first: '$sortedAyahs' },
+          endAyah: { $last: '$sortedAyahs' }
+        }
+      },
+      {
         $project: {
           _id: 0,
           number: '$juz_number',
-          name: { $concat: ['الجزء ', { $toString: '$juz_number' }] },
+          name: { 
+            $switch: {
+              branches: [
+                { case: { $eq: ['$juz_number', 1] }, then: 'الجزء الأول' },
+                { case: { $eq: ['$juz_number', 2] }, then: 'الجزء الثاني' },
+                { case: { $eq: ['$juz_number', 3] }, then: 'الجزء الثالث' },
+                { case: { $eq: ['$juz_number', 4] }, then: 'الجزء الرابع' },
+                { case: { $eq: ['$juz_number', 5] }, then: 'الجزء الخامس' },
+                { case: { $eq: ['$juz_number', 6] }, then: 'الجزء السادس' },
+                { case: { $eq: ['$juz_number', 7] }, then: 'الجزء السابع' },
+                { case: { $eq: ['$juz_number', 8] }, then: 'الجزء الثامن' },
+                { case: { $eq: ['$juz_number', 9] }, then: 'الجزء التاسع' },
+                { case: { $eq: ['$juz_number', 10] }, then: 'الجزء العاشر' },
+                { case: { $eq: ['$juz_number', 11] }, then: 'الجزء الحادي عشر' },
+                { case: { $eq: ['$juz_number', 12] }, then: 'الجزء الثاني عشر' },
+                { case: { $eq: ['$juz_number', 13] }, then: 'الجزء الثالث عشر' },
+                { case: { $eq: ['$juz_number', 14] }, then: 'الجزء الرابع عشر' },
+                { case: { $eq: ['$juz_number', 15] }, then: 'الجزء الخامس عشر' },
+                { case: { $eq: ['$juz_number', 16] }, then: 'الجزء السادس عشر' },
+                { case: { $eq: ['$juz_number', 17] }, then: 'الجزء السابع عشر' },
+                { case: { $eq: ['$juz_number', 18] }, then: 'الجزء الثامن عشر' },
+                { case: { $eq: ['$juz_number', 19] }, then: 'الجزء التاسع عشر' },
+                { case: { $eq: ['$juz_number', 20] }, then: 'الجزء العشرون' },
+                { case: { $eq: ['$juz_number', 21] }, then: 'الجزء الحادي والعشرون' },
+                { case: { $eq: ['$juz_number', 22] }, then: 'الجزء الثاني والعشرون' },
+                { case: { $eq: ['$juz_number', 23] }, then: 'الجزء الثالث والعشرون' },
+                { case: { $eq: ['$juz_number', 24] }, then: 'الجزء الرابع والعشرون' },
+                { case: { $eq: ['$juz_number', 25] }, then: 'الجزء الخامس والعشرون' },
+                { case: { $eq: ['$juz_number', 26] }, then: 'الجزء السادس والعشرون' },
+                { case: { $eq: ['$juz_number', 27] }, then: 'الجزء السابع والعشرون' },
+                { case: { $eq: ['$juz_number', 28] }, then: 'الجزء الثامن والعشرون' },
+                { case: { $eq: ['$juz_number', 29] }, then: 'الجزء التاسع والعشرون' },
+                { case: { $eq: ['$juz_number', 30] }, then: 'الجزء الثلاثون' }
+              ],
+              default: { $concat: ['الجزء ', { $toString: '$juz_number' }] }
+            }
+          },
           englishName: { $concat: ['Juz ', { $toString: '$juz_number' }] },
           totalAyahs: 1,
-          surahs: 1
+          startSurah: {
+            number: '$startAyah.sura_number',
+            name: '$startAyah.sura_name_arabic',
+            startAyah: '$startAyah.ayah_number'
+          },
+          endSurah: {
+            number: '$endAyah.sura_number',
+            name: '$endAyah.sura_name_arabic',
+            endAyah: '$endAyah.ayah_number'
+          },
+          displayName: {
+            $concat: [
+              '$startAyah.sura_name_arabic',
+              ' (',
+              { $toString: '$startAyah.sura_number' },
+              ':',
+              { $toString: '$startAyah.ayah_number' },
+              ') - ',
+              '$endAyah.sura_name_arabic',
+              ' (',
+              { $toString: '$endAyah.sura_number' },
+              ':',
+              { $toString: '$endAyah.ayah_number' },
+              ')'
+            ]
+          },
+          range: {
+            $concat: [
+              '$startAyah.sura_name_arabic',
+              ' (',
+              { $toString: '$startAyah.sura_number' },
+              ':',
+              { $toString: '$startAyah.ayah_number' },
+              ') - ',
+              '$endAyah.sura_name_arabic',
+              ' (',
+              { $toString: '$endAyah.sura_number' },
+              ':',
+              { $toString: '$endAyah.ayah_number' },
+              ')'
+            ]
+          }
         }
       }
     ]).exec();
@@ -996,6 +1091,81 @@ export class RecitationsService {
     this.loggerService.logUserActivity('quarter_accessed', userId, { 
       juzNumber, hizbNumber, quarterNumber 
     });
+
+    return result;
+  }
+
+  /**
+   * Get specific Rubʿ al-Hizb by direct rub number (1-240)
+   */
+  async getRub(rubNumber: number, query: GetQuranQueryDto, userId: string): Promise<any> {
+    if (rubNumber < 1 || rubNumber > 240) {
+      throw new NotFoundException('Invalid Rub number. Must be between 1 and 240');
+    }
+
+    const cacheKey = `rub:${rubNumber}:${JSON.stringify(query)}`;
+    const cached = await this.redisService.get(cacheKey);
+
+    if (cached) {
+      this.loggerService.logUserActivity('rub_accessed', userId, { rubNumber, cached: true });
+      return JSON.parse(cached);
+    }
+
+    const db = this.databaseService.getConnection().db;
+    const collection = db.collection('quran_ayahs');
+
+    // Calculate juz and hizb numbers from rub number
+    // Each Juz has 8 Rubs (240 total / 30 Juz = 8 Rubs per Juz)
+    // Each Hizb has 4 Rubs (240 total / 60 Hizb = 4 Rubs per Hizb)
+    const juzNumber = Math.ceil(rubNumber / 8);
+    const hizbNumber = Math.ceil(rubNumber / 4);
+    const quarterInHizb = ((rubNumber - 1) % 4) + 1; // Quarter within the Hizb (1-4)
+
+    // Get all ayahs for this Hizb
+    const allAyahs = await collection.find({ 
+      juz_number: juzNumber, 
+      hizb_number: hizbNumber 
+    })
+    .sort({ sura_number: 1, ayah_number: 1 })
+    .toArray();
+
+    if (allAyahs.length === 0) {
+      throw new NotFoundException('Rub not found');
+    }
+
+    // Divide ayahs into 4 quarters and get the requested quarter
+    const totalAyahs = allAyahs.length;
+    const ayahsPerQuarter = Math.ceil(totalAyahs / 4);
+    const quarterIndex = quarterInHizb - 1; // Convert to 0-based index
+    
+    const startIndex = quarterIndex * ayahsPerQuarter;
+    const endIndex = Math.min((quarterIndex + 1) * ayahsPerQuarter, totalAyahs);
+    const rubAyahs = allAyahs.slice(startIndex, endIndex);
+
+    if (rubAyahs.length === 0) {
+      throw new NotFoundException('Rub not found');
+    }
+
+    // Format ayahs according to the requested structure
+    const formattedAyahs = rubAyahs.map(ayah => ({
+      number: ayah.ayah_number,
+      text: ayah.ayah_text_arabic,
+      surahNumber: ayah.sura_number,
+      surahName: ayah.sura_name_arabic,
+      translation: query.translation ? '' : undefined // TODO: Add translation lookup
+    }));
+
+    const result = {
+      rubNumber,
+      hizbNumber,
+      juzNumber,
+      ayahs: formattedAyahs
+    };
+
+    // Cache for 30 minutes
+    await this.redisService.set(cacheKey, JSON.stringify(result), 1800);
+
+    this.loggerService.logUserActivity('rub_accessed', userId, { rubNumber });
 
     return result;
   }

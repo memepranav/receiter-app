@@ -360,3 +360,10 @@ Based on the mobile app design:
 - Centralized configuration management
 - Automated testing with CI/CD integration
 - Code formatting with Prettier and ESLint
+
+
+## Port Configurations:
+
+# Local host is connected in 3005, and no API or Database in Local.
+# Local Host is connected to the Live API
+# Server files are using 3000 for admin and 3001 for APIß

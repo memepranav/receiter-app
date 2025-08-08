@@ -460,14 +460,14 @@ function ProfilePageContent() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-semibold">
-                    {profile.profile?.displayName || 
-                     `${profile.profile?.firstName || ''} ${profile.profile?.lastName || ''}`.trim() || 
+                    {profile?.profile?.displayName || 
+                     `${profile?.profile?.firstName || ''} ${profile?.profile?.lastName || ''}`.trim() || 
                      'Admin User'}
                   </h2>
-                  <p className="text-muted-foreground">{profile.email}</p>
+                  <p className="text-muted-foreground">{profile?.email}</p>
                   <div className="flex items-center space-x-2 mt-1">
                     <Shield className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium capitalize">{profile.role}</span>
+                    <span className="text-sm font-medium capitalize">{profile?.role}</span>
                   </div>
                 </div>
               </div>
@@ -494,9 +494,9 @@ function ProfilePageContent() {
                       onClick={() => {
                         setEditing(false)
                         setEditData({
-                          firstName: profile.profile?.firstName || '',
-                          lastName: profile.profile?.lastName || '',
-                          displayName: profile.profile?.displayName || ''
+                          firstName: profile?.profile?.firstName || '',
+                          lastName: profile?.profile?.lastName || '',
+                          displayName: profile?.profile?.displayName || ''
                         })
                       }}
                       className="flex items-center space-x-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
@@ -520,7 +520,7 @@ function ProfilePageContent() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile.profile?.firstName || 'Not set'}</p>
+                  <p className="text-gray-900">{profile?.profile?.firstName || 'Not set'}</p>
                 )}
               </div>
 
@@ -534,7 +534,7 @@ function ProfilePageContent() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile.profile?.lastName || 'Not set'}</p>
+                  <p className="text-gray-900">{profile?.profile?.lastName || 'Not set'}</p>
                 )}
               </div>
 
@@ -548,7 +548,7 @@ function ProfilePageContent() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                 ) : (
-                  <p className="text-gray-900">{profile.profile?.displayName || 'Not set'}</p>
+                  <p className="text-gray-900">{profile?.profile?.displayName || 'Not set'}</p>
                 )}
               </div>
 
@@ -556,8 +556,8 @@ function ProfilePageContent() {
                 <label className="block text-sm font-medium mb-2">Email</label>
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-900">{profile.email}</span>
-                  {profile.status.isEmailVerified && (
+                  <span className="text-gray-900">{profile?.email}</span>
+                  {profile?.status?.isEmailVerified && (
                     <span className="text-green-600 text-sm">(Verified)</span>
                   )}
                 </div>
@@ -573,9 +573,9 @@ function ProfilePageContent() {
               <div>
                 <label className="block text-sm font-medium mb-2">Account Status</label>
                 <div className="flex items-center space-x-2">
-                  <div className={`h-2 w-2 rounded-full ${profile.status.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  <span className={profile.status.isActive ? 'text-green-700' : 'text-red-700'}>
-                    {profile.status.isActive ? 'Active' : 'Inactive'}
+                  <div className={`h-2 w-2 rounded-full ${profile?.status?.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className={profile?.status?.isActive ? 'text-green-700' : 'text-red-700'}>
+                    {profile?.status?.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
               </div>
@@ -584,7 +584,7 @@ function ProfilePageContent() {
                 <label className="block text-sm font-medium mb-2">Role</label>
                 <div className="flex items-center space-x-2">
                   <Shield className="h-4 w-4 text-primary" />
-                  <span className="capitalize">{profile.role.replace('_', ' ')}</span>
+                  <span className="capitalize">{profile?.role?.replace('_', ' ')}</span>
                 </div>
               </div>
 
@@ -593,7 +593,7 @@ function ProfilePageContent() {
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-4 w-4 text-gray-500" />
                   <span>
-                    {profile.security.lastLoginDate 
+                    {profile?.security?.lastLoginDate 
                       ? new Date(profile.security.lastLoginDate).toLocaleString()
                       : 'Never'
                     }
@@ -605,7 +605,7 @@ function ProfilePageContent() {
                 <label className="block text-sm font-medium mb-2">Account Created</label>
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-4 w-4 text-gray-500" />
-                  <span>{new Date(profile.createdAt).toLocaleDateString()}</span>
+                  <span>{profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Unknown'}</span>
                 </div>
               </div>
             </div>

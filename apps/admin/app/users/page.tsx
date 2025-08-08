@@ -75,7 +75,7 @@ export default function UsersPage() {
       title: 'Active Users',
       value: data?.stats?.activeUsers?.toLocaleString() || '0',
       change: '+8%',
-      bgColor: 'gradient-primary',
+      bgColor: 'bg-blue-600',
       textColor: 'text-white'
     },
     {
@@ -83,7 +83,7 @@ export default function UsersPage() {
       title: 'Total Points',
       value: data?.stats?.totalPoints ? `${Math.round(data.stats.totalPoints / 1000)}K` : '0',
       change: '+23%',
-      bgColor: 'gradient-secondary',
+      bgColor: 'bg-purple-600',
       textColor: 'text-white'
     }
   ]

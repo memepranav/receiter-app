@@ -24,7 +24,7 @@ Get list of all 114 Surahs with basic information.
 #### Response (200)
 ```json
 {
-  "success": true,
+  "success": true,  
   "data": [
     {
       "number": 1,

@@ -30,7 +30,7 @@ export default function DashboardPage() {
       title: 'User Management',
       subtitle: 'Manage registered users',
       value: data?.stats.totalUsers?.toLocaleString() || '0',
-      bgColor: 'gradient-primary-soft',
+      bgColor: 'bg-slate-50',
       textColor: 'text-slate-800',
       buttonText: 'View Users',
       href: '/users'
@@ -40,7 +40,7 @@ export default function DashboardPage() {
       title: 'Analytics Dashboard',
       subtitle: 'View detailed statistics',
       value: data?.stats.activeUsers ? `${Math.round((data.stats.activeUsers / data.stats.totalUsers) * 100)}% Active` : '0% Active',
-      bgColor: 'gradient-primary',
+      bgColor: 'bg-blue-600',
       textColor: 'text-white',
       buttonText: 'View Analytics',
       href: '/analytics'
@@ -50,7 +50,7 @@ export default function DashboardPage() {
       title: 'Rewards Processing',
       subtitle: 'Total points distributed',
       value: data?.stats.totalPoints ? `${Math.round(data.stats.totalPoints / 1000)}K Points` : '0 Points',
-      bgColor: 'gradient-secondary',
+      bgColor: 'bg-purple-600',
       textColor: 'text-white',
       buttonText: 'View Rewards',
       href: '/rewards'
@@ -103,7 +103,7 @@ export default function DashboardPage() {
                 {actionCards.map((card, index) => {
                   const Icon = card.icon
                   return (
-                    <Card key={index} className={`p-6 ${card.bgColor} border-0 relative overflow-hidden gradient-card`}>
+                    <Card key={index} className={`p-6 ${card.bgColor} border-0 relative overflow-hidden`}>
                       <div className={`${card.textColor}`}>
                         <div className="flex items-center justify-between mb-4">
                           <Icon className="h-8 w-8" />

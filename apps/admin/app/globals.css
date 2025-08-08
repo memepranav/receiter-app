@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Override autofill and focus styles completely */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  box-shadow: 0 0 0 30px white inset !important;
+  border: 1px solid #e5e7eb !important;
+  -webkit-text-fill-color: #1f2937 !important;
+}
+
+input:focus,
+input:focus-visible,
+input:active {
+  outline: none !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: none !important;
+  ring: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Force remove any yellow/colored borders or backgrounds */
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+  border: 1px solid #e5e7eb !important;
+  background-color: white !important;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="text"]:focus {
+  border: 1px solid #e5e7eb !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 @layer base {
   :root {
     --background: 245 245 245; /* #F5F5F5 */
@@ -68,58 +105,7 @@
   }
 }
 
-/* Custom gradients */
-.gradient-primary {
-  background: linear-gradient(135deg, #5955DD 0%, #4A46C7 100%);
-  box-shadow: 0 4px 15px rgba(89, 85, 221, 0.3);
-}
 
-.gradient-secondary {
-  background: linear-gradient(135deg, #F149FE 0%, #E937ED 100%);
-  box-shadow: 0 4px 15px rgba(241, 73, 254, 0.3);
-}
-
-.gradient-dual {
-  background: linear-gradient(135deg, #5955DD 0%, #F149FE 100%);
-  box-shadow: 0 4px 15px rgba(89, 85, 221, 0.2);
-}
-
-.gradient-primary-soft {
-  background: linear-gradient(135deg, rgba(89, 85, 221, 0.15) 0%, rgba(89, 85, 221, 0.05) 100%);
-  border: 1px solid rgba(89, 85, 221, 0.2);
-  box-shadow: 0 2px 8px rgba(89, 85, 221, 0.1);
-}
-
-.gradient-secondary-soft {
-  background: linear-gradient(135deg, rgba(241, 73, 254, 0.15) 0%, rgba(241, 73, 254, 0.05) 100%);
-  border: 1px solid rgba(241, 73, 254, 0.2);
-  box-shadow: 0 2px 8px rgba(241, 73, 254, 0.1);
-}
-
-.gradient-tertiary {
-  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-}
-
-.gradient-success {
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-}
-
-.gradient-warning {
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-}
-
-/* Gradient card hover effects */
-.gradient-card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.gradient-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
 
 /* Override browser autofill yellow background */
 input:-webkit-autofill,

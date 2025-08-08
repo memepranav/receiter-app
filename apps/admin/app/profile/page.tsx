@@ -113,13 +113,26 @@ function ProfilePageContent() {
   })
 
   useEffect(() => {
-    fetchProfile()
-    fetchSystemConfig()
-  }, [])
+    // Only fetch data if user is authenticated
+    if (user) {
+      fetchProfile()
+      fetchSystemConfig()
+    } else {
+      // If no user, stop loading states
+      setLoading(false)
+      setConfigLoading(false)
+    }
+  }, [user]) // Depend on user state, not empty dependency
 
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('admin_token')
+      if (!token) {
+        console.error('No authentication token found')
+        setLoading(false)
+        return
+      }
+      
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
       console.log('🔍 Fetching profile from:', `${apiUrl}/api/admin/auth/me`)
       
@@ -144,6 +157,13 @@ function ProfilePageContent() {
           lastName: profileData.profile?.lastName || '',
           displayName: profileData.profile?.displayName || ''
         })
+      } else if (response.status === 401) {
+        console.error('Authentication failed - redirecting to login')
+        // Clear invalid tokens and redirect to login
+        localStorage.removeItem('admin_token')
+        localStorage.removeItem('admin_user')
+        window.location.href = '/login'
+        return
       } else if (response.status === 429) {
         console.error('Rate limited - too many requests to server API')
         // Don't set profile to null, keep trying
@@ -164,6 +184,12 @@ function ProfilePageContent() {
   const fetchSystemConfig = async () => {
     try {
       const token = localStorage.getItem('admin_token')
+      if (!token) {
+        console.error('No authentication token found for system config')
+        setConfigLoading(false)
+        return
+      }
+      
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
       console.log('⚙️ Fetching system config from:', `${apiUrl}/api/admin/settings`)
       
@@ -198,6 +224,13 @@ function ProfilePageContent() {
         }
         setSystemConfig(defaultConfig)
         setConfigData(defaultConfig)
+      } else if (response.status === 401) {
+        console.error('Authentication failed for system config - redirecting to login')
+        // Clear invalid tokens and redirect to login
+        localStorage.removeItem('admin_token')
+        localStorage.removeItem('admin_user')
+        window.location.href = '/login'
+        return
       } else {
         console.error('Failed to fetch system config:', response.status, response.statusText)
       }
@@ -325,25 +358,50 @@ function ProfilePageContent() {
     )
   }
 
-  if (!profile) {
+  if (!user && !loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center max-w-md">
-          <h2 className="text-xl font-semibold mb-2">Connection Issue</h2>
+          <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
           <p className="text-muted-foreground mb-4">
-            Unable to load profile data. This might be due to server rate limiting or connectivity issues.
+            You need to be logged in to access this page.
           </p>
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>• Check if you're logged in properly</p>
-            <p>• Server may be rate limiting requests</p>
-            <p>• Try refreshing the page in a few minutes</p>
-          </div>
           <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+            onClick={() => window.location.href = '/login'} 
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
           >
-            Retry
+            Go to Login
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!profile && user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold mb-2">Profile Loading Issue</h2>
+          <p className="text-muted-foreground mb-4">
+            Unable to load profile data. Your authentication might have expired.
+          </p>
+          <div className="space-y-2">
+            <button 
+              onClick={() => {
+                localStorage.clear()
+                window.location.href = '/login'
+              }} 
+              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 mr-2"
+            >
+              Login Again
+            </button>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     )

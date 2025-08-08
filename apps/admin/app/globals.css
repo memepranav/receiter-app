@@ -121,3 +121,42 @@ table thead tr {
 .border-gray {
   border-color: #E2E8F0;
 }
+
+/* Safari-specific fixes */
+@supports (-webkit-appearance: none) {
+  html, body, #__next, main, div {
+    background-color: #F5F5F5 !important;
+  }
+  
+  /* Override any yellow or unwanted backgrounds */
+  * {
+    background-color: transparent !important;
+  }
+  
+  html, body, #__next, main {
+    background-color: #F5F5F5 !important;
+  }
+  
+  /* Specific component backgrounds */
+  .bg-background {
+    background-color: #F5F5F5 !important;
+  }
+  
+  /* Force card backgrounds */
+  [class*="bg-slate-"] {
+    background-color: #F8FAFC !important;
+  }
+  
+  [class*="bg-blue-"] {
+    background-color: #2563EB !important;
+  }
+  
+  [class*="bg-purple-"] {
+    background-color: #9333EA !important;
+  }
+  
+  /* Ensure white backgrounds for cards */
+  [class*="bg-white"] {
+    background-color: #FFFFFF !important;
+  }
+}

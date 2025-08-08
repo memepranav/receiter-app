@@ -4,8 +4,16 @@ import { RedisClientType } from 'redis';
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
+  private readonly cacheEnabled: boolean;
 
-  constructor(@Inject('REDIS_CLIENT') private readonly redisClient: RedisClientType) {}
+  constructor(@Inject('REDIS_CLIENT') private readonly redisClient: RedisClientType) {
+    // Disable Redis caching in development mode
+    this.cacheEnabled = process.env.REDIS_CACHE_ENABLED !== 'false';
+    
+    if (!this.cacheEnabled) {
+      this.logger.warn('🚫 Redis caching is DISABLED for development');
+    }
+  }
 
   async onModuleDestroy() {
     await this.redisClient.quit();
@@ -15,6 +23,12 @@ export class RedisService implements OnModuleDestroy {
    * Set a key-value pair with optional expiration
    */
   async set(key: string, value: string | number | object, ttlSeconds?: number): Promise<void> {
+    // Skip caching if disabled
+    if (!this.cacheEnabled) {
+      this.logger.debug(`🚫 Cache SET skipped for key: ${key}`);
+      return;
+    }
+
     try {
       const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
       
@@ -33,6 +47,12 @@ export class RedisService implements OnModuleDestroy {
    * Get value by key
    */
   async get(key: string): Promise<string | null> {
+    // Always return null if caching is disabled (force cache miss)
+    if (!this.cacheEnabled) {
+      this.logger.debug(`🚫 Cache GET skipped for key: ${key}`);
+      return null;
+    }
+
     try {
       return await this.redisClient.get(key);
     } catch (error) {
